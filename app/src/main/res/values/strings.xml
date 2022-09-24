@@ -1,0 +1,58 @@
+<resources>
+    <string name="app_name">Androidmatic</string>
+
+    <string name="title_main">@string/app_name</string>
+    <string name="title_add_station">Select Stations</string>
+    <string name="title_choose_station">Select Station</string>
+
+    <string name="action_try_again">Try Again</string>
+
+    <string name="image_desc_close">Close</string>
+    <string name="image_desc_refresh">Refresh</string>
+    <string name="image_desc_filter_enabled">Filter enabled</string>
+    <string name="image_desc_filter_disabled">Filter disabled</string>
+    <string name="image_desc_sorting_parameter">Sorting by %s</string>
+    <string name="image_desc_temperature">Temperature</string>
+    <string name="image_desc_humidity">Humidity</string>
+    <string name="image_desc_pressure">Pressure</string>
+    <string name="image_desc_wind">Wind</string>
+    <string name="image_desc_rain">Rain</string>
+
+    <string name="menu_item_home">Home</string>
+    <string name="menu_item_settings">Settings</string>
+
+    <string name="title_filter_province">Province</string>
+    <string name="title_sort_by">Sort By</string>
+    <string name="filter_toggle_all_off">All Off</string>
+    <string name="sort_by">Sort By %s</string>
+    <string name="sort_by_name">Name</string>
+    <string name="sort_by_location">Location</string>
+    <string name="sort_by_distance">Distance</string>
+
+    <string name="no_stations_found">No stations found</string>
+
+    <string name="error_load_stations">Could not load stations</string>
+    <string name="error_server_reach">The Meteoclimatic server could not be reached. Please, check your Internet connection and try again later.</string>
+
+    <string name="weather_sunny">Sunny</string>
+
+    <string name="time_short_seconds">%d s</string>
+    <string name="time_short_minutes">%d min</string>
+    <string name="time_short_hours">%d h</string>
+    <string name="time_short_days">%d days</string>
+
+    <string name="state_adding">Adding…</string>
+
+    <string name="settings_category_advanced">Advanced</string>
+    <string name="settings_analytics_enabled_title">Send Usage and Performance data</string>
+    <string name="settings_analytics_enabled_summary">If enabled, the app will send the developer information about the performance of the app, and how it\'s used, to improve its functionality.</string>
+    <string name="settings_error_enabled_title">Send Error and Crash logs</string>
+    <string name="settings_error_enabled_summary">If enabled, the app will send information to the developer whenever the app crashes, or there\'s an error. This makes the process of diagnosing and fixing errors so much easier. This information contains app logs, and some information about the device you are running, and the software it\'s running.</string>
+
+    <string name="widget_weather_description">A widget that displays the current weather of a desired station.</string>
+    <string name="widget_loading">Loading…</string>
+    <string name="widget_weather_image_content_description">The descriptive icon for the current weather.</string>
+    <string name="widget_weather_preview_name">Antarctica</string>
+    <string name="widget_weather_preview_temp">24ºC</string>
+    <string name="widget_weather_preview_rain">2 mm</string>
+</resources>

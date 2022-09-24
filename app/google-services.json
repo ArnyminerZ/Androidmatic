@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1045335368323",
+    "project_id": "androidmatic-app",
+    "storage_bucket": "androidmatic-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045335368323:android:b7f4d3e4f712ebe5bfb1b6",
+        "android_client_info": {
+          "package_name": "com.arnyminerz.androidmatic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1045335368323-ninpodds9jkh3m0cf486noeeg4ut7ubk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.arnyminerz.androidmatic",
+            "certificate_hash": "f2cbf5756fe47bef2f4b9b6e230f79d2837e8224"
+          }
+        },
+        {
+          "client_id": "1045335368323-jk65qv722eo9qqcfsd5n89tk44gr7ffj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkMen6YXdhl9HAP_nSiqIECVwVLeTXyOQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1045335368323-jk65qv722eo9qqcfsd5n89tk44gr7ffj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
