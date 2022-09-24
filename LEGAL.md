@@ -6,5 +6,7 @@ under the [Attribution-NonCommercial-NoDerivs 3.0 Unported][by-mc-nd-link] licen
 3. He reserves the right to collect diagnostics information about the app's performance and error
 supervision for diagnostic purposes. This can be disabled at any moment in the app's configuration.
 
+This license may be modified without any prior advise.
+
 [meteoclimatic-link]: https://www.meteoclimatic.net/
 [by-mc-nd-link]: https://creativecommons.org/licenses/by-nc-nd/3.0/
