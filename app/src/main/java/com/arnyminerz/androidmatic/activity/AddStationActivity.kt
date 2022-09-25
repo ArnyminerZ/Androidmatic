@@ -52,8 +52,10 @@ import androidx.compose.ui.unit.sp
 import com.android.volley.TimeoutError
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.Station
+import com.arnyminerz.androidmatic.storage.database.entity.SelectedStationEntity
 import com.arnyminerz.androidmatic.ui.components.SortingChip
 import com.arnyminerz.androidmatic.ui.components.StationCard
+import com.arnyminerz.androidmatic.ui.components.ToggleableChip
 import com.arnyminerz.androidmatic.ui.theme.setThemedContent
 import com.arnyminerz.androidmatic.ui.viewmodel.StationManagerViewModel
 import com.arnyminerz.androidmatic.utils.toggle
@@ -218,6 +220,7 @@ open class AddStationActivity(
         val enabledStations by viewModel.enabledStationsFlow.collectAsState(initial = emptyList())
         val filterLocations = remember { mutableStateListOf<String>() }
         val filterSearch by remember { mutableStateOf("") }
+        var filterEnabled by remember { mutableStateOf(false) }
 
         /**
          * Stores the kind of sorting chosen by the user. Values:
@@ -317,6 +320,30 @@ open class AddStationActivity(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
+                    Icons.Rounded.FilterList,
+                    stringResource(R.string.title_filter),
+                    modifier = Modifier.padding(end = 4.dp),
+                )
+                Text(
+                    text = stringResource(R.string.title_filter),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+            ) {
+                ToggleableChip(
+                    filterEnabled,
+                    stringResource(R.string.filter_enabled),
+                ) { filterEnabled = !filterEnabled }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
                     Icons.Rounded.Sort,
                     stringResource(R.string.title_sort_by),
                     modifier = Modifier.padding(end = 4.dp),
@@ -348,7 +375,13 @@ open class AddStationActivity(
             Divider()
 
             AnimatedVisibility(
-                visible = filterStations(stations, filterSearch, sortingBy)
+                visible = filterStations(
+                    stations,
+                    enabledStations,
+                    filterSearch,
+                    sortingBy,
+                    filterEnabled
+                )
                     .isEmpty(),
                 modifier = Modifier.padding(8.dp),
             ) {
@@ -361,7 +394,13 @@ open class AddStationActivity(
 
             LazyColumn {
                 items(
-                    filterStations(stations, filterSearch, sortingBy),
+                    filterStations(
+                        stations,
+                        enabledStations,
+                        filterSearch,
+                        sortingBy,
+                        filterEnabled
+                    ),
                 ) { station ->
                     var checkboxLoading by remember { mutableStateOf(false) }
                     if (!filterLocations.contains(station.location))
@@ -409,18 +448,22 @@ open class AddStationActivity(
         }
     }
 
-    private fun filterStations(stations: List<Station>, filterSearch: String, sortingBy: Int) =
-        stations
-            .filter {
-                filterSearch.isBlank() || it.title.contains(filterSearch)
+    private fun filterStations(
+        stations: List<Station>,
+        enabledStations: List<SelectedStationEntity>,
+        filterSearch: String,
+        sortingBy: Int,
+        filterEnabled: Boolean,
+    ) = stations
+        .filter { filterSearch.isBlank() || it.title.contains(filterSearch) }
+        .filter { s -> !filterEnabled || enabledStations.find { it.stationUid == s.uid } != null }
+        .sortedBy {
+            when (sortingBy) {
+                0 -> it.name
+                1 -> it.location
+                else -> it.title
             }
-            .sortedBy {
-                when (sortingBy) {
-                    0 -> it.name
-                    1 -> it.location
-                    else -> it.title
-                }
-            }
+        }
 
     // Only used by extension activities
     protected open fun onSelectStation(station: Station) {}
