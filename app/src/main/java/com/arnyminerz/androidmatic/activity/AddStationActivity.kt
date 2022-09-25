@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Sort
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +34,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,6 +60,7 @@ import com.arnyminerz.androidmatic.ui.components.StationCard
 import com.arnyminerz.androidmatic.ui.components.ToggleableChip
 import com.arnyminerz.androidmatic.ui.theme.setThemedContent
 import com.arnyminerz.androidmatic.ui.viewmodel.StationManagerViewModel
+import com.arnyminerz.androidmatic.utils.filterSearch
 import com.arnyminerz.androidmatic.utils.toggle
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -219,7 +222,7 @@ open class AddStationActivity(
         val stations by viewModel.stationsFlow.collectAsState(initial = emptyList())
         val enabledStations by viewModel.enabledStationsFlow.collectAsState(initial = emptyList())
         val filterLocations = remember { mutableStateListOf<String>() }
-        val filterSearch by remember { mutableStateOf("") }
+        var filterSearch by remember { mutableStateOf("") }
         var filterEnabled by remember { mutableStateOf(false) }
 
         /**
@@ -246,6 +249,22 @@ open class AddStationActivity(
             modifier = Modifier
                 .fillMaxSize(),
         ) {
+            OutlinedTextField(
+                value = filterSearch,
+                onValueChange = { filterSearch = it },
+                label = { Text(stringResource(R.string.title_search)) },
+                leadingIcon = { Icon(Icons.Rounded.Search, stringResource(R.string.title_search)) },
+                trailingIcon = {
+                    AnimatedVisibility(visible = filterSearch.isNotBlank()) {
+                        IconButton(onClick = { filterSearch = "" }) {
+                            Icon(Icons.Rounded.Close, stringResource(R.string.action_clear))
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -455,7 +474,7 @@ open class AddStationActivity(
         sortingBy: Int,
         filterEnabled: Boolean,
     ) = stations
-        .filter { filterSearch.isBlank() || it.title.contains(filterSearch) }
+        .filterSearch(filterSearch) { it.title }
         .filter { s -> !filterEnabled || enabledStations.find { it.stationUid == s.uid } != null }
         .sortedBy {
             when (sortingBy) {
