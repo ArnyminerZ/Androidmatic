@@ -8,6 +8,7 @@
     <string name="action_try_again">Try Again</string>
 
     <string name="image_desc_close">Close</string>
+    <string name="image_desc_add_station">Add Station</string>
     <string name="image_desc_refresh">Refresh</string>
     <string name="image_desc_filter_enabled">Filter enabled</string>
     <string name="image_desc_filter_disabled">Filter disabled</string>
