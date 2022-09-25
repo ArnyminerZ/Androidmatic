@@ -33,6 +33,9 @@
 
     <string name="error_load_stations">Could not load stations</string>
     <string name="error_server_reach">The Meteoclimatic server could not be reached. Please, check your Internet connection and try again later.</string>
+    <string name="error_load_data">Could not load station\'s data</string>
+    <string name="error_server_timeout">The connection to Meteoclimatic\'s server timed out. Please, try again later</string>
+    <string name="error_unknown">An unknown error could not allow the data to be loaded.</string>
 
     <string name="weather_sunny">Sunny</string>
 
