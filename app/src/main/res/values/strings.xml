@@ -24,11 +24,13 @@
 
     <string name="title_filter_province">Province</string>
     <string name="title_sort_by">Sort By</string>
+    <string name="title_filter">Filter</string>
     <string name="filter_toggle_all_off">All Off</string>
     <string name="sort_by">Sort By %s</string>
     <string name="sort_by_name">Name</string>
     <string name="sort_by_location">Location</string>
     <string name="sort_by_distance">Distance</string>
+    <string name="filter_enabled">Enabled</string>
 
     <string name="no_stations_found">No stations found</string>
 
