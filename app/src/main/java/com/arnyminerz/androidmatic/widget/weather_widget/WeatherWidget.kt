@@ -8,12 +8,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
 import androidx.glance.LocalGlanceId
+import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.state.updateAppWidgetState
@@ -27,16 +28,12 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
-import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.arnyminerz.androidmatic.R
-import com.arnyminerz.androidmatic.data.Station
-import com.arnyminerz.androidmatic.data.WeatherStateSample
-import com.arnyminerz.androidmatic.storage.dataStore
 import com.arnyminerz.androidmatic.utils.shortTime
 import com.arnyminerz.androidmatic.widget.TintImage
 import com.arnyminerz.androidmatic.widget.provideColorFromResource
@@ -98,6 +95,8 @@ class WeatherWidget : GlanceAppWidget() {
         }
     }
 
+    override val sizeMode: SizeMode = SizeMode.Exact
+
     override suspend fun onDelete(context: Context, glanceId: GlanceId) {
         updateAppWidgetState(context, glanceId) { preferences ->
             Timber.i("Removing data for widget $glanceId...")
@@ -109,6 +108,7 @@ class WeatherWidget : GlanceAppWidget() {
     override fun Content() {
         val context = LocalContext.current
         val glanceId = LocalGlanceId.current
+        val size = LocalSize.current
 
         val prefs = currentState<Preferences>()
         val data = prefs[preferencesKey(glanceId)]?.let {
@@ -149,16 +149,45 @@ class WeatherWidget : GlanceAppWidget() {
                     modifier = GlanceModifier
                         .fillMaxWidth(),
                 )
-                WeatherRow(
-                    "${weather.temperatureValues.value}ºC",
-                    R.string.image_desc_temperature,
-                    R.drawable.ic_thermometer_48dp,
-                )
-                WeatherRow(
-                    "${weather.rain}mm",
-                    R.string.image_desc_rain,
-                    R.drawable.ic_rainy_48dp,
-                )
+                Row(
+                    modifier = GlanceModifier
+                        .fillMaxWidth(),
+                ) {
+                    Column(
+                        modifier = GlanceModifier
+                            .defaultWeight(),
+                    ) {
+                        WeatherRow(
+                            "${weather.temperatureValues.value}ºC",
+                            R.string.image_desc_temperature,
+                            R.drawable.ic_thermometer_48dp,
+                        )
+                        WeatherRow(
+                            "${weather.rain}mm",
+                            R.string.image_desc_rain,
+                            R.drawable.ic_rainy_48dp,
+                        )
+                    }
+                    if (size.width > 225.dp)
+                        Column(
+                            modifier = GlanceModifier
+                                .defaultWeight(),
+                        ) {
+                            WeatherRow(
+                                "${weather.humidityValues.value}%",
+                                R.string.image_desc_humidity,
+                                R.drawable.ic_humidity_48dp,
+                            )
+                            val windDirection =
+                                context.resources.getStringArray(R.array.wind_directions)
+                            val windDirectionIndex = weather.windDirectionLocalizedIndex()
+                            WeatherRow(
+                                "${weather.windSpeedValues.value}km/h (${windDirection[windDirectionIndex]})",
+                                R.string.image_desc_wind,
+                                R.drawable.ic_wind_48dp,
+                            )
+                        }
+                }
 
                 val diff = Date().time - weather.timestamp.time
                 Text(
