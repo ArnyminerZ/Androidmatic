@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
                             ) {
                                 Icon(
                                     Icons.Rounded.Add,
-                                    stringResource(R.string.image_desc_close),
+                                    stringResource(R.string.image_desc_add_station),
                                 )
                             }
                         },
