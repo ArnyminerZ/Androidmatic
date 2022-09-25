@@ -126,7 +126,13 @@ class WeatherWidget : GlanceAppWidget() {
                 .cornerRadius(24.dp),
         ) {
             TintImage(
-                resource = R.drawable.ic_weather_sunny,
+                resource = when (weather.literalState) {
+                    "sun" -> R.drawable.ic_weather_sunny
+                    "moon" -> R.drawable.ic_weather_moon
+                    "fog", "hazesun", "hazemoon" -> R.drawable.ic_weather_foggy
+                    "rain" -> R.drawable.ic_weather_rainy
+                    else -> R.drawable.ic_weather_sunny
+                },
                 tintColor = accentColor,
                 contentDescription = context.getString(R.string.widget_weather_image_content_description),
                 modifier = GlanceModifier
