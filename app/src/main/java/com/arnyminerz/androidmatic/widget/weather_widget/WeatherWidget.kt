@@ -23,6 +23,7 @@ import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -125,20 +126,42 @@ class WeatherWidget : GlanceAppWidget() {
                 .background(backgroundColor)
                 .cornerRadius(24.dp),
         ) {
-            TintImage(
-                resource = when (weather.literalState) {
-                    "sun" -> R.drawable.ic_weather_sunny
-                    "moon" -> R.drawable.ic_weather_moon
-                    "fog", "hazesun", "hazemoon" -> R.drawable.ic_weather_foggy
-                    "rain" -> R.drawable.ic_weather_rainy
-                    else -> R.drawable.ic_weather_sunny
-                },
-                tintColor = accentColor,
-                contentDescription = context.getString(R.string.widget_weather_image_content_description),
+            Column(
                 modifier = GlanceModifier
-                    .size(56.dp)
+                    .fillMaxHeight()
                     .padding(start = 8.dp, top = 8.dp),
-            )
+            ) {
+                TintImage(
+                    resource = when (weather.literalState) {
+                        "sun" -> R.drawable.ic_weather_sunny
+                        "moon" -> R.drawable.ic_weather_moon
+                        "fog", "hazesun", "hazemoon" -> R.drawable.ic_weather_foggy
+                        "rain" -> R.drawable.ic_weather_rainy
+                        else -> R.drawable.ic_weather_sunny
+                    },
+                    tintColor = accentColor,
+                    contentDescription = context.getString(R.string.widget_weather_image_content_description),
+                    modifier = GlanceModifier
+                        .size(56.dp),
+                )
+
+                Spacer(
+                    modifier = GlanceModifier
+                        .defaultWeight(),
+                )
+
+                val diff = Date().time - weather.timestamp.time
+                Text(
+                    diff.shortTime(context),
+                    modifier = GlanceModifier
+                        .padding(start = 4.dp, bottom = 4.dp),
+                    style = TextStyle(
+                        color = foregroundColor,
+                        textAlign = TextAlign.Start,
+                        fontSize = 12.sp,
+                    ),
+                )
+            }
             Column(
                 modifier = GlanceModifier
                     .defaultWeight()
@@ -194,19 +217,6 @@ class WeatherWidget : GlanceAppWidget() {
                             )
                         }
                 }
-
-                val diff = Date().time - weather.timestamp.time
-                Text(
-                    diff.shortTime(context),
-                    modifier = GlanceModifier
-                        .fillMaxWidth()
-                        .padding(end = 4.dp),
-                    style = TextStyle(
-                        color = foregroundColor,
-                        textAlign = TextAlign.End,
-                        fontSize = 12.sp,
-                    ),
-                )
             }
         }
     }
