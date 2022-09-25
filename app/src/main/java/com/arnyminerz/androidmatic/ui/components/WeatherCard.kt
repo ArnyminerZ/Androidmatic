@@ -11,6 +11,7 @@ import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.WaterDrop
+import androidx.compose.material.icons.rounded.WbCloudy
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -127,6 +128,13 @@ fun WeatherCard(station: Station, weather: WeatherState?) {
                         "${windValues.value} kmph (${windValues.max} kmph)",
                         icon = Icons.Rounded.Air,
                         contentDescription = stringResource(R.string.image_desc_wind),
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                    )
+                    IconText(
+                        "${weather.rain} mm",
+                        icon = Icons.Rounded.WbCloudy,
+                        contentDescription = stringResource(R.string.image_desc_rain),
                         modifier = Modifier
                             .fillMaxWidth(),
                     )
