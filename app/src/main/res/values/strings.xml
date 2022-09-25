@@ -6,6 +6,7 @@
     <string name="title_choose_station">Select Station</string>
 
     <string name="action_try_again">Try Again</string>
+    <string name="action_clear">Clear</string>
 
     <string name="image_desc_close">Close</string>
     <string name="image_desc_add_station">Add Station</string>
@@ -25,6 +26,7 @@
     <string name="title_filter_province">Province</string>
     <string name="title_sort_by">Sort By</string>
     <string name="title_filter">Filter</string>
+    <string name="title_search">Search</string>
     <string name="filter_toggle_all_off">All Off</string>
     <string name="sort_by">Sort By %s</string>
     <string name="sort_by_name">Name</string>
