@@ -58,4 +58,25 @@
     <string name="widget_weather_preview_name">Antarctica</string>
     <string name="widget_weather_preview_temp">24ºC</string>
     <string name="widget_weather_preview_rain">2 mm</string>
+
+    <string name="wind_direction_north">N</string>
+    <string name="wind_direction_north_east">NE</string>
+    <string name="wind_direction_east">E</string>
+    <string name="wind_direction_south_east">SE</string>
+    <string name="wind_direction_south">S</string>
+    <string name="wind_direction_south_west">SW</string>
+    <string name="wind_direction_west">W</string>
+    <string name="wind_direction_north_west">NW</string>
+    <string name="wind_direction_unknown" translatable="false">¿?</string>
+    <string-array name="wind_directions">
+        <item>@string/wind_direction_north</item>
+        <item>@string/wind_direction_north_east</item>
+        <item>@string/wind_direction_east</item>
+        <item>@string/wind_direction_south_east</item>
+        <item>@string/wind_direction_south</item>
+        <item>@string/wind_direction_south_west</item>
+        <item>@string/wind_direction_west</item>
+        <item>@string/wind_direction_north_west</item>
+        <item>@string/wind_direction_unknown</item>
+    </string-array>
 </resources>
