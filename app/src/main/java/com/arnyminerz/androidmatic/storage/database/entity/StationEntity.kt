@@ -13,11 +13,17 @@ data class StationEntity(
     @PrimaryKey val uid: String,
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "guid") val guid: String,
-    @ColumnInfo(name = "latitude") val latitude: Double,
-    @ColumnInfo(name = "longitude") val longitude: Double,
+    @ColumnInfo(name = "latitude") val latitude: Double?,
+    @ColumnInfo(name = "longitude") val longitude: Double?,
 ) {
     fun toStation(): Station =
-        Station(title, uid, guid, GeoPoint(latitude, longitude), null)
+        Station(
+            title,
+            uid,
+            guid,
+            if (latitude != null && longitude != null) GeoPoint(latitude, longitude) else null,
+            null
+        )
 }
 
 /**
@@ -26,4 +32,4 @@ data class StationEntity(
  * @since 20220923
  */
 fun Station.toEntity(): StationEntity =
-    StationEntity(uid, title, guid, point.latitude, point.longitude)
+    StationEntity(uid, title, guid, point?.latitude, point?.longitude)
