@@ -1,8 +1,10 @@
 package com.arnyminerz.androidmatic.data
 
+import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.annotation.WeatherLiteral
 import com.arnyminerz.androidmatic.data.model.JsonSerializable
 import com.arnyminerz.androidmatic.data.model.JsonSerializer
+import org.jetbrains.annotations.Range
 import org.json.JSONObject
 import java.util.Date
 
@@ -40,6 +42,32 @@ data class WeatherState(
         put("rain", rain)
         put("literal_state", literalState)
     }
+
+    /**
+     * Returns the index which represents the current wind direction in the directions string array.
+     * @author Arnau Mora
+     * @since 20220925
+     * @see R.array.wind_directions
+     */
+    fun windDirectionLocalizedIndex(): @Range(from = 0L, to = 8L) Int =
+        if (windDirection > 337.5 || windDirection <= 22.5)
+            0
+        else if (windDirection > 22.5 || windDirection <= 45 + 22.5)
+            1
+        else if (windDirection > 45 + 22.5 || windDirection <= 90 + 22.5)
+            2
+        else if (windDirection > 90 + 22.5 || windDirection <= 135 + 22.5)
+            3
+        else if (windDirection > 135 + 22.5 || windDirection <= 180 + 22.5)
+            4
+        else if (windDirection > 180 + 22.5 || windDirection <= 225 + 22.5)
+            5
+        else if (windDirection > 225 + 22.5 || windDirection <= 270 + 22.5)
+            6
+        else if (windDirection > 270 + 22.5 || windDirection <= 315 + 22.5)
+            7
+        else
+            8
 }
 
 val WeatherStateSample
