@@ -35,7 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arnyminerz.androidmatic.R
-import com.arnyminerz.androidmatic.data.NavigationBarItem
+import com.arnyminerz.androidmatic.data.ui.NavigationBarItem
 import com.arnyminerz.androidmatic.storage.Keys
 import com.arnyminerz.androidmatic.storage.dataStore
 import com.arnyminerz.androidmatic.storage.getAsState

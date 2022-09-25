@@ -4,6 +4,8 @@ import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.annotation.WeatherLiteral
 import com.arnyminerz.androidmatic.data.model.JsonSerializable
 import com.arnyminerz.androidmatic.data.model.JsonSerializer
+import com.arnyminerz.androidmatic.data.numeric.MaxValue
+import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
 import org.jetbrains.annotations.Range
 import org.json.JSONObject
 import java.util.Date

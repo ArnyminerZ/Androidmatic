@@ -3,16 +3,15 @@ package com.arnyminerz.androidmatic.data
 import android.content.Context
 import android.nfc.FormatException
 import androidx.annotation.WorkerThread
-import com.android.volley.Request
 import com.android.volley.VolleyError
-import com.android.volley.toolbox.StringRequest
 import com.arnyminerz.androidmatic.data.model.JsonSerializable
 import com.arnyminerz.androidmatic.data.model.JsonSerializer
-import com.arnyminerz.androidmatic.storage.database.entity.toEntity
+import com.arnyminerz.androidmatic.data.numeric.GeoPoint
+import com.arnyminerz.androidmatic.data.numeric.MaxValue
+import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
 import com.arnyminerz.androidmatic.singleton.VolleySingleton
 import com.arnyminerz.androidmatic.utils.readString
 import com.arnyminerz.androidmatic.utils.skip
-import com.arnyminerz.androidmatic.utils.ui
 import com.arnyminerz.androidmatic.utils.xmlPubDateFormatter
 import org.json.JSONException
 import org.json.JSONObject
@@ -20,11 +19,7 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import timber.log.Timber
 import java.io.IOException
-import java.time.format.DateTimeFormatter
 import java.util.Date
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 data class Station(
     val title: String,

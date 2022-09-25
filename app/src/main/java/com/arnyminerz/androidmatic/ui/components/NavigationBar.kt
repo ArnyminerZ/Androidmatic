@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
-import com.arnyminerz.androidmatic.data.NavigationBarItem
+import com.arnyminerz.androidmatic.data.ui.NavigationBarItem
 
 @Composable
 fun NavigationBar(

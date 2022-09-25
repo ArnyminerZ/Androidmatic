@@ -1,4 +1,4 @@
-package com.arnyminerz.androidmatic.data
+package com.arnyminerz.androidmatic.data.ui
 
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.vector.ImageVector

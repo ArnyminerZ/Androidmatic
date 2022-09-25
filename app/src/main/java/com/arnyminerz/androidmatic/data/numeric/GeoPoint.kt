@@ -1,4 +1,4 @@
-package com.arnyminerz.androidmatic.data
+package com.arnyminerz.androidmatic.data.numeric
 
 import org.json.JSONException
 import org.json.JSONObject

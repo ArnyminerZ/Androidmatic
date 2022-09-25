@@ -3,9 +3,8 @@ package com.arnyminerz.androidmatic.storage.database.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.arnyminerz.androidmatic.data.GeoPoint
 import com.arnyminerz.androidmatic.data.Station
-import java.util.Date
+import com.arnyminerz.androidmatic.data.numeric.GeoPoint
 
 @Entity(
     tableName = "stations",

@@ -27,11 +27,11 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.annotation.WeatherLiteral
-import com.arnyminerz.androidmatic.data.MaxValue
-import com.arnyminerz.androidmatic.data.MinMaxValue
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.StationSample
 import com.arnyminerz.androidmatic.data.WeatherState
+import com.arnyminerz.androidmatic.data.numeric.MaxValue
+import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
 import com.arnyminerz.androidmatic.utils.shortTime
 import java.util.Calendar
 import java.util.Date
