@@ -4,6 +4,6 @@ import androidx.annotation.StringDef
 
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER, AnnotationTarget.TYPE)
 @StringDef(
-    "sun", "moon", "hazesun", "suncloud", "rain", "fog", "hazemoon"
+    "sun", "moon", "hazesun", "suncloud", "rain", "fog", "hazemoon", "mist", "unknown"
 )
 annotation class WeatherLiteral

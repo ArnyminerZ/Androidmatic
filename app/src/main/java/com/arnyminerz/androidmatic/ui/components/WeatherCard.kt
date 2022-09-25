@@ -83,7 +83,7 @@ fun WeatherCard(station: Station, weather: WeatherState?) {
                             "moon" -> R.drawable.weather_moon
                             "hazesun" -> R.drawable.weather_haze
                             "suncloud" -> R.drawable.weather_cloudy
-                            "rain" -> R.drawable.weather_rain
+                            "rain", "mist" -> R.drawable.weather_rain
                             "fog" -> R.drawable.weather_fog
                             "hazemoon" -> R.drawable.weather_haze_moon
                             else -> R.drawable.weather_unknown
