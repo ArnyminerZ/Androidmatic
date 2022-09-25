@@ -27,7 +27,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.annotation.WeatherLiteral
-import com.arnyminerz.androidmatic.data.GeoPoint
 import com.arnyminerz.androidmatic.data.MaxValue
 import com.arnyminerz.androidmatic.data.MinMaxValue
 import com.arnyminerz.androidmatic.data.Station
@@ -86,6 +85,7 @@ fun WeatherCard(station: Station, weather: WeatherState?) {
                             "suncloud" -> R.drawable.weather_cloudy
                             "rain" -> R.drawable.weather_rain
                             "fog" -> R.drawable.weather_fog
+                            "hazemoon" -> R.drawable.weather_haze_moon
                             else -> R.drawable.weather_unknown
                         }
                     ),
@@ -138,7 +138,7 @@ fun WeatherCard(station: Station, weather: WeatherState?) {
 
 class WeatherCardLiteralStateProvider: PreviewParameterProvider<@WeatherLiteral String> {
     override val values: Sequence<@WeatherLiteral String> =
-        sequenceOf("sun", "moon", "hazesun", "suncloud", "rain", "fog", "unknown")
+        sequenceOf("sun", "hazesun", "suncloud", "rain", "fog", "moon", "hazemoon", "unknown")
 }
 
 @Preview
