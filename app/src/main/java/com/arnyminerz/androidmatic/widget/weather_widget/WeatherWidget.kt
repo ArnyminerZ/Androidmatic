@@ -13,8 +13,10 @@ import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
 import androidx.glance.LocalGlanceId
 import androidx.glance.LocalSize
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.state.updateAppWidgetState
@@ -142,7 +144,8 @@ class WeatherWidget : GlanceAppWidget() {
                     tintColor = accentColor,
                     contentDescription = context.getString(R.string.widget_weather_image_content_description),
                     modifier = GlanceModifier
-                        .size(56.dp),
+                        .size(56.dp)
+                        .clickable(actionRunCallback<RefreshAction>()),
                 )
 
                 Spacer(
