@@ -25,10 +25,10 @@ data class Station(
     val title: String,
     val uid: String,
     val guid: String,
-    val point: GeoPoint,
+    val point: GeoPoint?,
     val description: String?,
-): JsonSerializable {
-    companion object: JsonSerializer<Station> {
+) : JsonSerializable {
+    companion object : JsonSerializer<Station> {
         /**
          * Creates a new station from the given [XmlPullParser].
          * @author Arnau Mora
@@ -92,7 +92,9 @@ data class Station(
                 json.getString("title"),
                 json.getString("uid"),
                 json.getString("guid"),
-                GeoPoint.fromJson(json.getJSONObject("point")),
+                json.takeIf { it.has("point") }
+                    ?.getJSONObject("point")
+                    ?.let { GeoPoint.fromJson(it) },
                 json.takeIf { it.has("description") }?.let { json.getString("description") }
             )
     }
@@ -200,7 +202,7 @@ data class Station(
         put("title", title)
         put("uid", uid)
         put("guid", guid)
-        put("point", point.toJson())
+        put("point", point?.toJson())
         put("description", description)
     }
 }
