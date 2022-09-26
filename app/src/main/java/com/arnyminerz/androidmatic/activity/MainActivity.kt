@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity() {
                         items(enStations) { selectedStation ->
                             viewModel.loadWeather(selectedStation)
 
-                            weatherMap[selectedStation.stationUid]?.let {
+                            weatherMap[selectedStation.id]?.let {
                                 WeatherCard(it)
                             }
                         }

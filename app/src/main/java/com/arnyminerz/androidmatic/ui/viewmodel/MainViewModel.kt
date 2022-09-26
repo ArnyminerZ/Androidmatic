@@ -81,7 +81,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         .stationsDao()
         .getEnabledStations()
 
-    val weather = mutableStateMapOf<String, WeatherState>()
+    val weather = mutableStateMapOf<Int, WeatherState>()
 
     /**
      * Holds a list of all the stations that are being loaded. If empty, no background tasks are
@@ -89,7 +89,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * @author Arnau Mora
      * @since 20220924
      */
-    val loadingTasks = mutableStateListOf<String>()
+    val loadingTasks = mutableStateListOf<Int>()
 
     /**
      * Holds the error code for whenever there's an error while loading the data.
@@ -133,20 +133,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         force: Boolean = false,
         first: Boolean = true
     ): Job =
-        if (force || (!weather.contains(station.stationUid) && !loadingTasks.contains(station.stationUid)))
+        if (force || (!weather.contains(station.id) && !loadingTasks.contains(station.id)))
             launch {
                 try {
                     ui {
                         error = ERROR_NONE
-                        loadingTasks.add(station.stationUid)
+                        loadingTasks.add(station.id)
                     }
                     Timber.d("Fetching weather data for $station...")
                     val descriptor = HoldingDescriptor.fromJson(station.customDescriptor.json)
                     val provider = WeatherProvider.firstWithDescriptor(descriptor.name)
+                    Timber.d("  Provider for $station is: ${provider?.providerName}")
                     val stationWeather = provider?.fetchWeather(context, *descriptor.expand())
                     Timber.d("Weather data for $station is ready. Showing in UI...")
                     if (stationWeather != null)
-                        ui { weather[station.stationUid] = stationWeather }
+                        ui { weather[station.id] = stationWeather }
                 } catch (e: NoConnectionError) {
                     if (e.networkResponse?.statusCode == 304)
                         Timber.e("Could not load data since it has not changed.")
@@ -165,7 +166,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     Timber.e(e, "Could not build the weather data for station $station.")
                     ui { error = ERROR_DATA_FORMAT }
                 } finally {
-                    ui { loadingTasks.remove(station.stationUid) }
+                    ui { loadingTasks.remove(station.id) }
                 }
             }
         else launch { }
