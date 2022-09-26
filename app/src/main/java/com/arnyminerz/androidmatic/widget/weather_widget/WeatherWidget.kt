@@ -38,8 +38,8 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.utils.shortTime
+import com.arnyminerz.androidmatic.widget.GlanceTheme
 import com.arnyminerz.androidmatic.widget.TintImage
-import com.arnyminerz.androidmatic.widget.provideColorFromResource
 import org.json.JSONObject
 import timber.log.Timber
 import java.util.Date
@@ -51,23 +51,23 @@ class WeatherWidget : GlanceAppWidget() {
 
     private val backgroundColor: ColorProvider
         @Composable
-        get() = provideColorFromResource(
-            R.color.md_theme_light_background,
-            R.color.md_theme_dark_background
+        get() = androidx.glance.appwidget.unit.ColorProvider(
+            day = GlanceTheme.lightColors.background.getColor(LocalContext.current),
+            night = GlanceTheme.darkColors.background.getColor(LocalContext.current),
         )
 
     private val foregroundColor: ColorProvider
         @Composable
-        get() = provideColorFromResource(
-            R.color.md_theme_light_onBackground,
-            R.color.md_theme_dark_onBackground
+        get() = androidx.glance.appwidget.unit.ColorProvider(
+            day = GlanceTheme.lightColors.onBackground.getColor(LocalContext.current),
+            night = GlanceTheme.darkColors.onBackground.getColor(LocalContext.current),
         )
 
     private val accentColor: ColorProvider
         @Composable
-        get() = provideColorFromResource(
-            R.color.md_theme_light_tertiary,
-            R.color.md_theme_dark_tertiary
+        get() = androidx.glance.appwidget.unit.ColorProvider(
+            day = GlanceTheme.lightColors.primary.getColor(LocalContext.current),
+            night = GlanceTheme.darkColors.primary.getColor(LocalContext.current),
         )
 
     @Composable
@@ -118,7 +118,7 @@ class WeatherWidget : GlanceAppWidget() {
             WeatherWidgetData.fromJson(JSONObject(it))
         }!!
 
-        val station = data.station
+        // val station = data.station
         val weather = data.weather
 
         Row(
@@ -172,7 +172,7 @@ class WeatherWidget : GlanceAppWidget() {
                     .padding(8.dp),
             ) {
                 Text(
-                    station.name,
+                    weather.stationName,
                     style = TextStyle(
                         color = foregroundColor,
                         fontWeight = FontWeight.Bold,
