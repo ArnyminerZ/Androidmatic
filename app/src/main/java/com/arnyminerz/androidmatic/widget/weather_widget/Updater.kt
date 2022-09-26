@@ -28,4 +28,5 @@ suspend fun updateWeatherWidget(context: Context, glanceId: GlanceId) {
             },
         )
     }
+    WeatherWidget().update(context, glanceId)
 }
