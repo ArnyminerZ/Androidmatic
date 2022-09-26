@@ -95,4 +95,5 @@
 
     <string name="toast_provider_ok">The url is valid</string>
     <string name="toast_provider_fail">The url is not valid</string>
+    <string name="toast_provider_data_invalid">The URL is valid, but it\'s returning invalid data.</string>
 </resources>
