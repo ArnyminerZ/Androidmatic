@@ -12,18 +12,21 @@ abstract class HoldingDescriptor : Descriptor(), JsonSerializable {
             return object : HoldingDescriptor() {
                 override val name: String = json.getString("name")
 
-                override val data: Map<String, Any> = json
-                    .keys()
-                    .asSequence()
-                    .filter { json.get(it) is JSONObject }
-                    .associateWith { json.getJSONObject(it).get("value") }
+                override val data: Map<String, Any> = json.getJSONObject("params").let { json ->
+                    json.keys()
+                        .asSequence()
+                        .filter { json.get(it) is JSONObject }
+                        .associateWith { json.getJSONObject(it).get("value") }
+                }
 
-                override val parameters: Map<String, KClass<*>> = json
-                    .keys()
-                    .asSequence()
-                    .filter { json.get(it) is JSONObject }
-                    .associateWith {
-                        findClassForName(json.getJSONObject(it).getString("type"))::class
+                override val parameters: Map<String, KClass<*>> =
+                    json.getJSONObject("params").let { json ->
+                        json.keys()
+                            .asSequence()
+                            .filter { json.get(it) is JSONObject }
+                            .associateWith {
+                                findClassForName(json.getJSONObject(it).getString("type"))::class
+                            }
                     }
             }
         }
@@ -35,13 +38,15 @@ abstract class HoldingDescriptor : Descriptor(), JsonSerializable {
 
     override fun toJson(): JSONObject = JSONObject().apply {
         put("name", name)
+        val paramsObject = JSONObject()
         for ((key, type) in parameters)
-            put(
+            paramsObject.put(
                 key,
                 JSONObject().apply {
                     put("type", type.qualifiedName)
                     put("value", data[key])
                 }
             )
+        put("params", paramsObject)
     }
 }
