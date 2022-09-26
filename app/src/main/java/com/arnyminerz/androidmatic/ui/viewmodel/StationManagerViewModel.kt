@@ -10,6 +10,7 @@ import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
 import com.arnyminerz.androidmatic.singleton.DatabaseSingleton
+import com.arnyminerz.androidmatic.storage.database.dao.disableStationByUid
 import com.arnyminerz.androidmatic.storage.database.dao.enableStation
 import com.arnyminerz.androidmatic.storage.database.entity.toEntity
 import com.arnyminerz.androidmatic.utils.launch
@@ -117,6 +118,6 @@ class StationManagerViewModel(app: Application) : AndroidViewModel(app) {
     fun disableStation(station: Station) =
         launch {
             Timber.i("Disabling station $station...")
-            databaseSingleton.stationsDao().disableStation(station.uid)
+            databaseSingleton.stationsDao().disableStationByUid(station)
         }
 }

@@ -33,9 +33,13 @@ interface StationsDao {
     @WorkerThread
     suspend fun enableStation(station: SelectedStationEntity)
 
-    @Query("DELETE FROM selected_stations WHERE station_uid=:stationUid")
+    @Query("DELETE FROM selected_stations WHERE id=:id")
     @WorkerThread
-    suspend fun disableStation(stationUid: String)
+    suspend fun disableStation(id: Int)
+
+    @Query("DELETE FROM selected_stations WHERE station_uid=:uid AND descriptor=:descriptor")
+    @WorkerThread
+    suspend fun disableStationByUid(uid: String, descriptor: String)
 }
 
 @WorkerThread
@@ -47,3 +51,7 @@ suspend fun StationsDao.enableStation(station: Station) =
             station.descriptor.toJson().toString(),
         )
     )
+
+@WorkerThread
+suspend fun StationsDao.disableStationByUid(station: Station) =
+    disableStationByUid(station.uid, station.descriptor.toJson().toString())
