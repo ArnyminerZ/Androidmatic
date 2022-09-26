@@ -5,12 +5,11 @@ import android.nfc.FormatException
 import androidx.annotation.WorkerThread
 import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.model.JsonSerializable
+import com.arnyminerz.androidmatic.data.model.putSerializable
 import com.arnyminerz.androidmatic.data.numeric.GeoPoint
-import com.arnyminerz.androidmatic.data.providers.FetchParameters
 import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
-import com.arnyminerz.androidmatic.data.providers.SampleProvider
-import com.arnyminerz.androidmatic.data.providers.WeatherProvider
-import com.arnyminerz.androidmatic.data.providers.WeewxTemplateProvider
+import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
+import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.utils.readString
 import com.arnyminerz.androidmatic.utils.skip
 import com.arnyminerz.androidmatic.utils.xmlPubDateFormatter
@@ -20,14 +19,15 @@ import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import java.util.Date
+import kotlin.reflect.KClass
 
-data class Station<T : FetchParameters, P : WeatherProvider<T, P>>(
+data class Station(
     val title: String,
     val uid: String,
     val guid: String,
     val point: GeoPoint?,
     val description: String?,
-    val parameters: T,
+    val descriptor: HoldingDescriptor,
 ) : JsonSerializable {
     companion object {
         /**
@@ -45,7 +45,7 @@ data class Station<T : FetchParameters, P : WeatherProvider<T, P>>(
             NullPointerException::class,
             FormatException::class,
         )
-        fun fromXml(parser: XmlPullParser): Pair<Date, Station<MeteoclimaticProvider.FetchParams, MeteoclimaticProvider>> {
+        fun fromXml(parser: XmlPullParser): Pair<Date, Station> {
             parser.require(XmlPullParser.START_TAG, null, "item")
             var title: String? = null
             var link: String? = null
@@ -78,7 +78,7 @@ data class Station<T : FetchParameters, P : WeatherProvider<T, P>>(
                 guid!!,
                 GeoPoint.fromString(point!!),
                 description!!,
-                MeteoclimaticProvider.FetchParams(uid),
+                MeteoclimaticProvider.ProviderDescriptor.provide(uid),
             )
         }
 
@@ -90,7 +90,8 @@ data class Station<T : FetchParameters, P : WeatherProvider<T, P>>(
          * @return A new [Station] instance from the data in [json].
          * @throws JSONException When there's an error parsing the JSON object.
          */
-        fun <T : FetchParameters, W : WeatherProvider<T, W>> fromJson(json: JSONObject): Station<T, W> =
+        @Suppress("UNCHECKED_CAST")
+        fun fromJson(json: JSONObject): Station =
             Station(
                 json.getString("title"),
                 json.getString("uid"),
@@ -99,7 +100,7 @@ data class Station<T : FetchParameters, P : WeatherProvider<T, P>>(
                     ?.getJSONObject("point")
                     ?.let { GeoPoint.fromJson(it) },
                 json.takeIf { it.has("description") }?.let { json.getString("description") },
-                json.getJSONObject("params")
+                HoldingDescriptor.fromJson(json.getJSONObject("descriptor")),
             )
     }
 
@@ -110,7 +111,7 @@ data class Station<T : FetchParameters, P : WeatherProvider<T, P>>(
         title.lastIndexOf(')'),
     )
 
-    val provider = WeatherProvider.findOfType(P::class)
+    val provider: WeatherProvider? = WeatherProvider.firstWithDescriptor(descriptor.name)
 
     override fun toString(): String = uid
 
@@ -134,12 +135,8 @@ data class Station<T : FetchParameters, P : WeatherProvider<T, P>>(
     )
     @WorkerThread
     suspend fun fetchWeather(context: Context): WeatherState =
-        if (provider is MeteoclimaticProvider)
-            provider.fetchWeather(context, MeteoclimaticProvider.FetchParams(uid))
-        else if (provider is WeewxTemplateProvider)
-            provider.fetchWeather(context, WeewxTemplateProvider.FetchParams())
-        else
-            throw IllegalStateException("The provider is not supported: ${provider::class.simpleName}")
+        provider?.fetchWeather(context, *descriptor.expand())
+            ?: throw IllegalStateException("Could not find provider with descriptor ${descriptor::class.java}")
 
     override fun toJson(): JSONObject = JSONObject().apply {
         put("title", title)
@@ -147,15 +144,22 @@ data class Station<T : FetchParameters, P : WeatherProvider<T, P>>(
         put("guid", guid)
         put("point", point?.toJson())
         put("description", description)
+        putSerializable("descriptor", descriptor)
     }
 }
 
-val StationSample: Station<SampleProvider.Params, SampleProvider>
+val StationSample: Station
     get() = Station(
         "Testing Station (Location)",
         "1234",
         "1234",
         GeoPoint(0.0, 0.0),
         null,
-        SampleProvider.Params(),
+        object : HoldingDescriptor() {
+            override val name: String = "sample"
+
+            override val data: Map<String, Any> = emptyMap()
+
+            override val parameters: Map<String, KClass<*>> = emptyMap()
+        }
     )

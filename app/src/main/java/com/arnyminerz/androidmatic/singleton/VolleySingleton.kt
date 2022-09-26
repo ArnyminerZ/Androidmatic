@@ -7,6 +7,7 @@ import com.android.volley.RequestQueue
 import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -64,6 +65,7 @@ class VolleySingleton private constructor(context: Context) {
     @Throws(VolleyError::class)
     suspend fun getString(url: String): String =
         suspendCoroutine { cont ->
+            Timber.v("Running GET to $url...")
             addToRequestQueue(
                 StringRequest(
                     Request.Method.GET,

@@ -9,6 +9,7 @@ import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
 import com.arnyminerz.androidmatic.singleton.DatabaseSingleton
+import com.arnyminerz.androidmatic.storage.database.dao.enableStation
 import com.arnyminerz.androidmatic.storage.database.entity.toEntity
 import com.arnyminerz.androidmatic.utils.launch
 import kotlinx.coroutines.flow.Flow
@@ -95,6 +96,9 @@ class StationManagerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Enables the given [Station] in the Stations Dao.
+     */
     fun enableStation(station: Station) =
         launch {
             Timber.i("Enabling station $station...")

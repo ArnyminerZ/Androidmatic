@@ -1,6 +1,7 @@
 package com.arnyminerz.androidmatic.ui.viewmodel
 
 import android.app.Application
+import androidx.annotation.IntDef
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -12,6 +13,8 @@ import com.android.volley.TimeoutError
 import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.WeatherState
+import com.arnyminerz.androidmatic.data.WeatherStateSample
+import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.singleton.DatabaseSingleton
 import com.arnyminerz.androidmatic.utils.launch
 import com.arnyminerz.androidmatic.utils.ui
@@ -42,6 +45,17 @@ const val ERROR_SERVER_SEARCH = 1
  */
 const val ERROR_TIMEOUT = 2
 
+/**
+ * The given data is not valid.
+ * @author Arnau Mora
+ * @since 20220926
+ */
+const val ERROR_DATA_FORMAT = 3
+
+
+@IntDef(ERROR_NONE, ERROR_SERVER_SEARCH, ERROR_TIMEOUT, ERROR_DATA_FORMAT)
+annotation class ErrorType
+
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val databaseSingleton = DatabaseSingleton.getInstance(app)
 
@@ -53,9 +67,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val stations = databaseSingleton
         .stationsDao()
         .getAllFlow()
-        .map { list ->
-            list.map { it.toStation() }
-        }
+        .map { list -> list.map { it.toStation() } }
 
     /**
      * Stores a flow with all the ids of the enabled stations.
@@ -65,9 +77,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val enabledStations = databaseSingleton
         .stationsDao()
         .getEnabledStations()
-        .map { list ->
-            list.map { it.stationUid }
-        }
+        .map { list -> list.map { it.stationUid } }
 
     val weather = mutableStateMapOf<String, WeatherState>()
 
@@ -86,8 +96,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * @see ERROR_NONE
      * @see ERROR_SERVER_SEARCH
      * @see ERROR_TIMEOUT
+     * @see ERROR_DATA_FORMAT
      */
-    var error by mutableStateOf(0)
+    @ErrorType
+    var error: Int by mutableStateOf(0)
         private set
 
     /**
@@ -127,11 +139,26 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     Timber.d("Weather data for $station is ready. Showing in UI...")
                     ui { weather[station.uid] = stationWeather }
                 } catch (e: NoConnectionError) {
-                    ui { error = ERROR_SERVER_SEARCH }
-                    if (first)
-                        loadWeather(station, force, false)
+                    if (e.networkResponse?.statusCode == 304)
+                        Timber.e("Could not load data since it has not changed.")
+                    else {
+                        ui { error = ERROR_SERVER_SEARCH }
+                        if (first)
+                            loadWeather(station, force, false)
+                    }
                 } catch (e: TimeoutError) {
                     ui { error = ERROR_TIMEOUT }
+                } catch (e: IllegalStateException) {
+                    Timber.w("Station descriptor: ${station.descriptor::class.java}")
+                    Timber.w("Weather providers: ${WeatherProvider.providers.map { it::class }}")
+                    Timber.e(
+                        e,
+                        "Could not find a provider for the station. Provider: ${station.provider}. Descriptor class: ${station.descriptor::class}"
+                    )
+                    ui { weather[station.uid] = WeatherStateSample }
+                } catch (e: IllegalArgumentException) {
+                    Timber.e(e, "Could not build the weather data for station $station.")
+                    ui { error = ERROR_DATA_FORMAT }
                 } finally {
                     ui { loadingTasks.remove(station.uid) }
                 }

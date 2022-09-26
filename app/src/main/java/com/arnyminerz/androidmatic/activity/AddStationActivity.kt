@@ -1,6 +1,7 @@
 package com.arnyminerz.androidmatic.activity
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -64,6 +66,7 @@ import com.android.volley.TimeoutError
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.providers.WeewxTemplateProvider
+import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.storage.database.entity.SelectedStationEntity
 import com.arnyminerz.androidmatic.ui.components.SortingChip
 import com.arnyminerz.androidmatic.ui.components.StationCard
@@ -81,6 +84,7 @@ import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.text.ParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 open class AddStationActivity(
@@ -112,6 +116,26 @@ open class AddStationActivity(
 
     private var updatedStations = false
 
+    /**
+     * Called whenever the user presses the back button, or the close button is tapped.
+     * @author Arnau Mora
+     * @since 20220924
+     * @see onClosed
+     */
+    private fun onBack(
+        currentPage: Int,
+        forceClose: Boolean = false,
+        scrollPage: (page: Int) -> Unit
+    ) {
+        if (forceClose || currentPage >= 1)
+            onClosed?.invoke(this) ?: run {
+                setResult(if (updatedStations) RESULT_UPDATED else RESULT_IDLE)
+                finish()
+            }
+        else
+            scrollPage(1)
+    }
+
     @OptIn(ExperimentalPagerApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,23 +147,9 @@ open class AddStationActivity(
             val scope = rememberCoroutineScope()
             val pagerState = rememberPagerState(1)
 
-            /**
-             * Called whenever the user presses the back button, or the close button is tapped.
-             * @author Arnau Mora
-             * @since 20220924
-             * @see onClosed
-             */
-            fun onBack() {
-                if (pagerState.currentPage >= 1)
-                    onClosed?.invoke(this) ?: run {
-                        setResult(if (updatedStations) RESULT_UPDATED else RESULT_IDLE)
-                        finish()
-                    }
-                else
-                    scope.launch { pagerState.animateScrollToPage(1) }
+            BackHandler {
+                onBack(pagerState.currentPage) { scope.launch { pagerState.animateScrollToPage(1) } }
             }
-
-            BackHandler(onBack = ::onBack)
 
             Scaffold(
                 topBar = {
@@ -158,7 +168,13 @@ open class AddStationActivity(
                         },
                         navigationIcon = {
                             IconButton(
-                                onClick = ::onBack,
+                                onClick = {
+                                    onBack(pagerState.currentPage) {
+                                        scope.launch {
+                                            pagerState.animateScrollToPage(1)
+                                        }
+                                    }
+                                },
                             ) {
                                 Icon(
                                     Icons.Rounded.Close,
@@ -598,8 +614,10 @@ open class AddStationActivity(
                     onClick = {
                         enabled = false
                         doAsync {
-                            val valid = WeewxTemplateProvider(templateUrl, stationName)
-                                .check(context)
+                            val valid = WeatherProvider
+                                .firstWithDescriptor(WeewxTemplateProvider.ProviderDescriptor.name)
+                                ?.check(context, "name" to stationName, "url" to templateUrl)
+                                ?: false
                             ui {
                                 toast(
                                     if (valid)
@@ -620,11 +638,34 @@ open class AddStationActivity(
                     onClick = {
                         enabled = false
                         doAsync {
-                            WeewxTemplateProvider(templateUrl, stationName)
-                                .check(context)
-                                .takeIf { it }
-                                ?: return@doAsync
-
+                            try {
+                                WeatherProvider
+                                    .firstWithDescriptor(WeewxTemplateProvider.ProviderDescriptor.name)
+                                    ?.fetch(context, "name" to stationName, "url" to templateUrl)
+                                    ?.takeIf { it.stations.isNotEmpty() }
+                                    ?.also { Timber.i("Station is fine!") }
+                                    ?.let { (_, stations) -> viewModel.enableStation(stations[0]) }
+                                    ?.also { onBack(0, true) {} }
+                                    ?: ui {
+                                        toast(getString(R.string.toast_provider_fail))
+                                    }
+                            } catch (e: NullPointerException) {
+                                Timber.e(
+                                    e,
+                                    "Could not load station data, since some data is incomplete."
+                                )
+                            } catch (e: ParseException) {
+                                Timber.e(e, "There's a parameter missing in data.")
+                                ui {
+                                    toast(
+                                        getString(R.string.toast_provider_data_invalid),
+                                        Toast.LENGTH_LONG
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                // TODO: Handle exceptions
+                                Timber.e(e, "Could not load provider.")
+                            }
                         }.invokeOnCompletion { enabled = true }
                     },
                     modifier = Modifier

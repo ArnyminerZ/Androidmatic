@@ -8,6 +8,8 @@ import com.arnyminerz.androidmatic.data.StationFeedResult
 import com.arnyminerz.androidmatic.data.WeatherState
 import com.arnyminerz.androidmatic.data.numeric.MaxValue
 import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
+import com.arnyminerz.androidmatic.data.providers.model.Descriptor
+import com.arnyminerz.androidmatic.data.providers.model.WeatherListProvider
 import com.arnyminerz.androidmatic.singleton.VolleySingleton
 import com.arnyminerz.androidmatic.utils.skip
 import org.xmlpull.v1.XmlPullParser
@@ -20,25 +22,32 @@ import kotlin.reflect.KClass
 // We don't use namespaces
 private val ns: String? = null
 
-class MeteoclimaticProvider :
-    WeatherProvider<MeteoclimaticProvider.FetchParams, MeteoclimaticProvider>() {
+class MeteoclimaticProvider : WeatherListProvider() {
     override val providerName: String = "meteoclimatic"
 
-    class FetchParams(val uid: String) : FetchParameters {
+    override val descriptor = ProviderDescriptor
+
+    object ProviderDescriptor : Descriptor() {
+        override val name: String = "meteoclimatic_descriptor"
+
         override val parameters: Map<String, KClass<*>> = mapOf(
             "uid" to String::class,
         )
+
+        fun provide(uid: String) = provide("uid" to uid)
     }
 
-    override suspend fun list(context: Context): List<Station<FetchParams, MeteoclimaticProvider>> =
-        fetch(context, FetchParams("ES")).stations
+    override suspend fun list(context: Context): List<Station> =
+        fetch(context, "uid" to "ES").stations
 
     override suspend fun fetch(
         context: Context,
-        params: FetchParams
-    ): StationFeedResult<FetchParams, MeteoclimaticProvider> {
+        vararg params: Pair<String, Any>,
+    ): StationFeedResult {
         Timber.d("Getting station ($this) data from Meteoclimatic...")
-        val uid = params.uid
+        val uid = params.find { it.first == "uid" }?.second
+            ?: throw IllegalArgumentException("params doesn't have any \"uid\".")
+        Timber.v("Found uid in parameters: $uid")
         val url = "https://www.meteoclimatic.net/feed/rss/$uid"
         val feed: String = try {
             VolleySingleton
@@ -70,17 +79,25 @@ class MeteoclimaticProvider :
         return readFeed(parser)
     }
 
-    override suspend fun fetchWeather(context: Context, params: FetchParams): WeatherState {
-        val uid = params.uid
-        val feedResult = fetch(context, params)
+    override suspend fun fetchWeather(
+        context: Context,
+        vararg params: Pair<String, Any>
+    ): WeatherState {
+        val uid = params.find { it.first == "uid" }?.second
+            ?: throw IllegalArgumentException("params doesn't have any \"uid\".")
+        val feedResult = fetch(context, *params)
         val station = feedResult.stations
             // There should only be one station. Handle null just in case it wasn't found
             .firstOrNull()
             ?: throw ArrayIndexOutOfBoundsException("Could not find any stations in feed.")
-        val description = station.description?.split('\n')
+        val description = station.description
+            ?.split('\n')
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
             ?: throw IllegalStateException("Station doesn't have any description data.")
-        val dataRaw = description.find { it.startsWith("[[<$uid") }
-            ?: throw IllegalArgumentException("Could not find weather data in description. Description: $description")
+        val dataRaw = description
+            .find { it.startsWith("[[<$uid", true) }
+            ?: throw IllegalArgumentException("Could not find weather data (<$uid) in description. Description: $description")
         val dataBlocks = dataRaw
             .substring(dataRaw.indexOf(';') + 1, dataRaw.lastIndexOf(">]]"))
             // Remove all parenthesis
@@ -119,8 +136,8 @@ class MeteoclimaticProvider :
     }
 
     @Throws(XmlPullParserException::class, IOException::class)
-    private fun readFeed(parser: XmlPullParser): StationFeedResult<FetchParams, MeteoclimaticProvider> {
-        val entries = mutableListOf<Station<FetchParams, MeteoclimaticProvider>>()
+    private fun readFeed(parser: XmlPullParser): StationFeedResult {
+        val entries = mutableListOf<Station>()
         var timestamp: Date? = null
 
         parser.require(XmlPullParser.START_TAG, ns, "rss")
