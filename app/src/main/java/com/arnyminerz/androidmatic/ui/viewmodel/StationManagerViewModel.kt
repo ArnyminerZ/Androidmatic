@@ -100,11 +100,12 @@ class StationManagerViewModel(app: Application) : AndroidViewModel(app) {
      * Enables the given [Station] in the Stations Dao.
      * @author Arnau Mora
      * @since 20220926
+     * @param station The station to enable.
      */
-    fun enableStation(station: Station, isCustom: Boolean = false) =
+    fun enableStation(station: Station) =
         launch {
             Timber.i("Enabling station $station...")
-            databaseSingleton.stationsDao().enableStation(station, isCustom)
+            databaseSingleton.stationsDao().enableStation(station)
         }
 
     fun disableStation(station: Station) =

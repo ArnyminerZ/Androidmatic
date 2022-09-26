@@ -10,5 +10,5 @@ import androidx.room.PrimaryKey
 data class SelectedStationEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "station_uid") val stationUid: String,
-    @ColumnInfo(name = "custom_descriptor") val customDescriptor: String?,
+    @ColumnInfo(name = "descriptor") val customDescriptor: String,
 )

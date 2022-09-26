@@ -39,11 +39,11 @@ interface StationsDao {
 }
 
 @WorkerThread
-suspend fun StationsDao.enableStation(station: Station, isCustom: Boolean = false) =
+suspend fun StationsDao.enableStation(station: Station) =
     enableStation(
         SelectedStationEntity(
             0,
             station.uid,
-            if (isCustom) station.descriptor.name else null
+            station.descriptor.toJson().toString(),
         )
     )
