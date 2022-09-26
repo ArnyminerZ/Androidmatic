@@ -116,7 +116,7 @@ fun WeatherCard(weather: WeatherState?, onDeleteRequested: (() -> Job)?) {
         ) {
             Text(
                 text = weather?.stationName
-                    ?: stringResource(R.string.state_loading), // TODO: Localize
+                    ?: stringResource(R.string.state_loading),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
