@@ -644,7 +644,12 @@ open class AddStationActivity(
                                     ?.fetch(context, "name" to stationName, "url" to templateUrl)
                                     ?.takeIf { it.stations.isNotEmpty() }
                                     ?.also { Timber.i("Station is fine!") }
-                                    ?.let { (_, stations) -> viewModel.enableStation(stations[0]) }
+                                    ?.let { (_, stations) ->
+                                        viewModel.enableStation(
+                                            stations[0],
+                                            true
+                                        )
+                                    }
                                     ?.also { onBack(0, true) {} }
                                     ?: ui {
                                         toast(getString(R.string.toast_provider_fail))

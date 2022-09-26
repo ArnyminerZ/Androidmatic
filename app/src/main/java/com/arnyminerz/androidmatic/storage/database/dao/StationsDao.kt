@@ -2,7 +2,6 @@ package com.arnyminerz.androidmatic.storage.database.dao
 
 import androidx.annotation.WorkerThread
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import com.arnyminerz.androidmatic.data.Station
@@ -40,4 +39,11 @@ interface StationsDao {
 }
 
 @WorkerThread
-suspend fun StationsDao.enableStation(uid: String) = enableStation(SelectedStationEntity(0, uid))
+suspend fun StationsDao.enableStation(station: Station, isCustom: Boolean = false) =
+    enableStation(
+        SelectedStationEntity(
+            0,
+            station.uid,
+            if (isCustom) station.descriptor.name else null
+        )
+    )
