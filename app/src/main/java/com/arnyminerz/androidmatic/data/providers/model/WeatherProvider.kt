@@ -121,5 +121,17 @@ abstract class WeatherProvider {
             providers
                 .map { buildProvider(it) }
                 .find { it.descriptor.name == descriptorName }
+
+        /**
+         * Finds all providers that support the given capabilities.
+         * @author Arnau Mora
+         * @since 20220927
+         * @param capabilities The capabilities to search for.
+         * @return A list with all the providers available. May be empty if no matches.
+         */
+        fun getWithCapabilities(vararg capabilities: Descriptor.Capability) =
+            providers
+                .map { buildProvider(it) }
+                .filter { provider -> capabilities.all { provider.descriptor.supports(it) } }
     }
 }
