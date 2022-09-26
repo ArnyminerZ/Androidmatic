@@ -110,6 +110,7 @@ class MeteoclimaticProvider : WeatherListProvider() {
         Timber.i("dataBlocks: {${dataBlocks.joinToString(", ")}}")
         return WeatherState(
             feedResult.timestamp,
+            station.name,
             MinMaxValue(
                 dataBlocks[0].toDouble(),
                 dataBlocks[1].toDouble(),

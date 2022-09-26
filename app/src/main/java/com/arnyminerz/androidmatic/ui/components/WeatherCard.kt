@@ -28,8 +28,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.annotation.WeatherLiteral
-import com.arnyminerz.androidmatic.data.Station
-import com.arnyminerz.androidmatic.data.StationSample
 import com.arnyminerz.androidmatic.data.WeatherState
 import com.arnyminerz.androidmatic.data.numeric.MaxValue
 import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
@@ -38,7 +36,7 @@ import java.util.Calendar
 import java.util.Date
 
 @Composable
-fun WeatherCard(station: Station, weather: WeatherState?) {
+fun WeatherCard(weather: WeatherState?) {
     val context = LocalContext.current
 
     Card(
@@ -52,7 +50,7 @@ fun WeatherCard(station: Station, weather: WeatherState?) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = station.name,
+                text = weather?.stationName ?: "Loading...", // TODO: Localize
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -155,9 +153,9 @@ fun WeatherCardPreview(
     @PreviewParameter(WeatherCardLiteralStateProvider::class) literalState: String,
 ) {
     WeatherCard(
-        StationSample,
         WeatherState(
             Date(),
+            "Sample Station name",
             MinMaxValue(
                 24.1,
                 30.0,

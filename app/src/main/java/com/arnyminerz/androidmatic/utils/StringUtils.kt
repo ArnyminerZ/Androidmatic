@@ -2,6 +2,7 @@ package com.arnyminerz.androidmatic.utils
 
 import android.content.Context
 import com.arnyminerz.androidmatic.R
+import org.json.JSONObject
 
 /**
  * Converts a number of milliseconds into a [String] representing the time.
@@ -27,3 +28,12 @@ fun Long.shortTime(context: Context): String {
     val days = hours / 60
     return context.getString(R.string.time_short_days, days)
 }
+
+/**
+ * Converts the [String] to a [JSONObject].
+ * @author Arnau Mora
+ * @since 20220926
+ * @see JSONObject
+ */
+val String.json: JSONObject
+    get() = JSONObject(this)

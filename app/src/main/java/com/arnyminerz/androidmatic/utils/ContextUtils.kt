@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.UiThread
+import androidx.lifecycle.AndroidViewModel
 import kotlin.reflect.KClass
 
 /**
@@ -17,7 +18,7 @@ import kotlin.reflect.KClass
  * @param kClass The class of the Activity to launch.
  * @param options Used for applying options to the Intent being launched.
  */
-fun <A: Activity> Context.launch(kClass: KClass<A>, options: Intent.() -> Unit = {}) =
+fun <A : Activity> Context.launch(kClass: KClass<A>, options: Intent.() -> Unit = {}) =
     startActivity(Intent(this, kClass.java).apply(options))
 
 /**
@@ -37,3 +38,11 @@ fun Context.getColorAttribute(@AttrRes id: Int): Int {
 @UiThread
 fun Context.toast(text: String, duration: Int = Toast.LENGTH_SHORT) =
     Toast.makeText(this, text, duration).show()
+
+/**
+ * Runs [AndroidViewModel.getApplication] as [Context].
+ * @author Arnau Mora
+ * @since 20220926
+ */
+val AndroidViewModel.context: Context
+    get() = getApplication()

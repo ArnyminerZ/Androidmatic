@@ -119,15 +119,13 @@ class MainActivity : AppCompatActivity() {
     @Composable
     private fun HomeLayout() {
         val tasks = viewModel.loadingTasks
-        val stations by viewModel.stations.collectAsState(initial = emptyList())
+        val stations by viewModel.listedStations.collectAsState(initial = emptyList())
         val enabledStations by viewModel.enabledStations.collectAsState(initial = null)
 
         SwipeRefresh(
             state = rememberSwipeRefreshState(isRefreshing = tasks.isNotEmpty()),
             onRefresh = {
-                enabledStations
-                    ?.mapNotNull { uid -> stations.find { it.uid == uid } }
-                    ?.forEach { viewModel.loadWeather(it, true) }
+                enabledStations?.forEach { viewModel.loadWeather(it, true) }
             },
             modifier = Modifier
                 .fillMaxSize(),
@@ -175,12 +173,11 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     enabledStations?.let { enStations ->
-                        items(enStations) { stationId ->
-                            val station = stations.find { it.uid == stationId }
-                            if (station != null) {
-                                viewModel.loadWeather(station)
+                        items(enStations) { selectedStation ->
+                            viewModel.loadWeather(selectedStation)
 
-                                WeatherCard(station, weatherMap[stationId])
+                            weatherMap[selectedStation.stationUid]?.let {
+                                WeatherCard(it)
                             }
                         }
                     }

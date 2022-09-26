@@ -12,6 +12,7 @@ import java.util.Date
 
 data class WeatherState(
     val timestamp: Date,
+    val stationName: String,
     val temperatureValues: MinMaxValue,
     val humidityValues: MinMaxValue,
     val barometerValues: MinMaxValue,
@@ -24,6 +25,7 @@ data class WeatherState(
     companion object : JsonSerializer<WeatherState> {
         override fun fromJson(json: JSONObject): WeatherState = WeatherState(
             Date(json.getLong("timestamp")),
+            json.getString("station_name"),
             MinMaxValue.fromJson(json.getJSONObject("temperature")),
             MinMaxValue.fromJson(json.getJSONObject("humidity")),
             MinMaxValue.fromJson(json.getJSONObject("barometer")),
@@ -36,6 +38,7 @@ data class WeatherState(
 
     override fun toJson(): JSONObject = JSONObject().apply {
         put("timestamp", timestamp.time)
+        put("station_name", stationName)
         put("temperature", temperatureValues.toJson())
         put("humidity", humidityValues.toJson())
         put("barometer", barometerValues.toJson())
@@ -75,6 +78,7 @@ data class WeatherState(
 val WeatherStateSample
     get() = WeatherState(
         Date(),
+        "Sample Station name",
         MinMaxValue(
             24.1,
             30.0,

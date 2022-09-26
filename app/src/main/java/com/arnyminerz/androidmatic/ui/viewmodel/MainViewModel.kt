@@ -13,9 +13,12 @@ import com.android.volley.TimeoutError
 import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.WeatherState
-import com.arnyminerz.androidmatic.data.WeatherStateSample
+import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
 import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.singleton.DatabaseSingleton
+import com.arnyminerz.androidmatic.storage.database.entity.SelectedStationEntity
+import com.arnyminerz.androidmatic.utils.context
+import com.arnyminerz.androidmatic.utils.json
 import com.arnyminerz.androidmatic.utils.launch
 import com.arnyminerz.androidmatic.utils.ui
 import kotlinx.coroutines.Job
@@ -64,7 +67,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * @author Arnau Mora
      * @since 20220923
      */
-    val stations = databaseSingleton
+    val listedStations = databaseSingleton
         .stationsDao()
         .getAllFlow()
         .map { list -> list.map { it.toStation() } }
@@ -77,7 +80,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val enabledStations = databaseSingleton
         .stationsDao()
         .getEnabledStations()
-        .map { list -> list.map { it.stationUid } }
 
     val weather = mutableStateMapOf<String, WeatherState>()
 
@@ -126,18 +128,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         IllegalArgumentException::class,
         NullPointerException::class,
     )
-    fun loadWeather(station: Station, force: Boolean = false, first: Boolean = true): Job? =
-        if (force || (!weather.contains(station.uid) && !loadingTasks.contains(station.uid)))
+    fun loadWeather(
+        station: SelectedStationEntity,
+        force: Boolean = false,
+        first: Boolean = true
+    ): Job =
+        if (force || (!weather.contains(station.stationUid) && !loadingTasks.contains(station.stationUid)))
             launch {
                 try {
                     ui {
                         error = ERROR_NONE
-                        loadingTasks.add(station.uid)
+                        loadingTasks.add(station.stationUid)
                     }
                     Timber.d("Fetching weather data for $station...")
-                    val stationWeather = station.fetchWeather(getApplication())
+                    val descriptor = HoldingDescriptor.fromJson(station.customDescriptor.json)
+                    val provider = WeatherProvider.firstWithDescriptor(descriptor.name)
+                    val stationWeather = provider?.fetchWeather(context, *descriptor.expand())
                     Timber.d("Weather data for $station is ready. Showing in UI...")
-                    ui { weather[station.uid] = stationWeather }
+                    if (stationWeather != null)
+                        ui { weather[station.stationUid] = stationWeather }
                 } catch (e: NoConnectionError) {
                     if (e.networkResponse?.statusCode == 304)
                         Timber.e("Could not load data since it has not changed.")
@@ -149,19 +158,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 } catch (e: TimeoutError) {
                     ui { error = ERROR_TIMEOUT }
                 } catch (e: IllegalStateException) {
-                    Timber.w("Station descriptor: ${station.descriptor::class.java}")
-                    Timber.w("Weather providers: ${WeatherProvider.providers.map { it::class }}")
-                    Timber.e(
-                        e,
-                        "Could not find a provider for the station. Provider: ${station.provider}. Descriptor class: ${station.descriptor::class}"
-                    )
-                    ui { weather[station.uid] = WeatherStateSample }
+                    // Should not happen. Missing data is not usual
+                    // TODO: Show error for missing data
+                    Timber.e(e, "Could not parse contents since there's missing data.")
                 } catch (e: IllegalArgumentException) {
                     Timber.e(e, "Could not build the weather data for station $station.")
                     ui { error = ERROR_DATA_FORMAT }
                 } finally {
-                    ui { loadingTasks.remove(station.uid) }
+                    ui { loadingTasks.remove(station.stationUid) }
                 }
             }
-        else null
+        else launch { }
 }

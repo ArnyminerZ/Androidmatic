@@ -111,7 +111,8 @@ data class Station(
         title.lastIndexOf(')'),
     )
 
-    val provider: WeatherProvider? = WeatherProvider.firstWithDescriptor(descriptor.name)
+    val provider: WeatherProvider = WeatherProvider.firstWithDescriptor(descriptor.name)
+        ?: throw ClassNotFoundException("Could not find provider with descriptor named ${descriptor.name}")
 
     override fun toString(): String = uid
 
@@ -135,8 +136,7 @@ data class Station(
     )
     @WorkerThread
     suspend fun fetchWeather(context: Context): WeatherState =
-        provider?.fetchWeather(context, *descriptor.expand())
-            ?: throw IllegalStateException("Could not find provider with descriptor ${descriptor::class.java}")
+        provider.fetchWeather(context, *descriptor.expand())
 
     override fun toJson(): JSONObject = JSONObject().apply {
         put("title", title)

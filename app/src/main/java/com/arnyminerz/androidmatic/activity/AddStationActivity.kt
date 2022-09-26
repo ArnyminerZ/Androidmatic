@@ -646,9 +646,7 @@ open class AddStationActivity(
                                     ?.also { Timber.i("Station is fine!") }
                                     ?.let { (_, stations) -> viewModel.enableStation(stations[0]) }
                                     ?.also { onBack(0, true) {} }
-                                    ?: ui {
-                                        toast(getString(R.string.toast_provider_fail))
-                                    }
+                                    ?: ui { toast(getString(R.string.toast_provider_fail)) }
                             } catch (e: NullPointerException) {
                                 Timber.e(
                                     e,

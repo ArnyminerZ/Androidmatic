@@ -139,6 +139,7 @@ class WeewxTemplateProvider : WeatherProvider() {
         )
         val weather = WeatherState(
             timestamp ?: throw ParseException("Could not find timestamp.", 0),
+            name,
             MinMaxValue(
                 temperature ?: throw ParseException("Could not find temperature.", 1),
                 temperatureDayMin ?: throw ParseException("Could not find min temperature.", 2),
