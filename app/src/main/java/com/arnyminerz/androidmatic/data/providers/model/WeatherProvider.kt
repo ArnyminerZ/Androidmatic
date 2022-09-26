@@ -13,6 +13,13 @@ import java.text.ParseException
 import kotlin.reflect.KClass
 
 abstract class WeatherProvider {
+    /**
+     * The name that will be displayed to the user and represents the provider.
+     * @author Arnau Mora
+     * @since 20220927
+     */
+    abstract val displayName: String
+
     abstract val providerName: String
 
     abstract val descriptor: Descriptor

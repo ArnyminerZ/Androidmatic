@@ -23,6 +23,8 @@ import kotlin.reflect.KClass
 private val DateFormatter = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US)
 
 class WeewxTemplateProvider : WeatherProvider() {
+    override val displayName: String = "Weewx"
+
     override val providerName: String = "weewx"
 
     override val descriptor: ProviderDescriptor = ProviderDescriptor

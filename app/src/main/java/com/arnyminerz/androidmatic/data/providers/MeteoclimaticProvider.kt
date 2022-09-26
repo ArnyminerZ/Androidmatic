@@ -24,6 +24,8 @@ import kotlin.reflect.KClass
 private val ns: String? = null
 
 class MeteoclimaticProvider : WeatherListProvider() {
+    override val displayName: String = "Meteoclimatic"
+
     override val providerName: String = "meteoclimatic"
 
     override val descriptor = ProviderDescriptor
