@@ -22,7 +22,6 @@ import com.arnyminerz.androidmatic.utils.json
 import com.arnyminerz.androidmatic.utils.launch
 import com.arnyminerz.androidmatic.utils.ui
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 /**
@@ -61,16 +60,6 @@ annotation class ErrorType
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val databaseSingleton = DatabaseSingleton.getInstance(app)
-
-    /**
-     * Stores a flow with all the ids of the enabled stations.
-     * @author Arnau Mora
-     * @since 20220923
-     */
-    val listedStations = databaseSingleton
-        .stationsDao()
-        .getAllFlow()
-        .map { list -> list.map { it.toStation() } }
 
     /**
      * Stores a flow with all the ids of the enabled stations.

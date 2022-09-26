@@ -119,7 +119,6 @@ class MainActivity : AppCompatActivity() {
     @Composable
     private fun HomeLayout() {
         val tasks = viewModel.loadingTasks
-        val stations by viewModel.listedStations.collectAsState(initial = emptyList())
         val enabledStations by viewModel.enabledStations.collectAsState(initial = null)
 
         SwipeRefresh(
