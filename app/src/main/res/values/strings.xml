@@ -11,6 +11,9 @@
     <string name="action_check">Check</string>
     <string name="action_add">Add</string>
 
+    <string name="dialog_action_close">Close</string>
+    <string name="dialog_action_delete">Delete</string>
+
     <string name="image_desc_close">Close</string>
     <string name="image_desc_add_station">Add Station</string>
     <string name="image_desc_refresh">Refresh</string>
@@ -58,6 +61,7 @@
     <string name="time_short_days">%d days</string>
 
     <string name="state_adding">Adding…</string>
+    <string name="state_loading">Loading…</string>
 
     <string name="settings_category_advanced">Advanced</string>
     <string name="settings_analytics_enabled_title">Send Usage and Performance data</string>
