@@ -5,11 +5,11 @@ import android.nfc.FormatException
 import androidx.annotation.WorkerThread
 import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.model.JsonSerializable
-import com.arnyminerz.androidmatic.data.model.JsonSerializer
+import com.arnyminerz.androidmatic.data.model.putSerializable
 import com.arnyminerz.androidmatic.data.numeric.GeoPoint
-import com.arnyminerz.androidmatic.data.numeric.MaxValue
-import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
-import com.arnyminerz.androidmatic.singleton.VolleySingleton
+import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
+import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
+import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.utils.readString
 import com.arnyminerz.androidmatic.utils.skip
 import com.arnyminerz.androidmatic.utils.xmlPubDateFormatter
@@ -17,18 +17,19 @@ import org.json.JSONException
 import org.json.JSONObject
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import timber.log.Timber
 import java.io.IOException
 import java.util.Date
+import kotlin.reflect.KClass
 
 data class Station(
     val title: String,
     val uid: String,
     val guid: String,
-    val point: GeoPoint,
+    val point: GeoPoint?,
     val description: String?,
-): JsonSerializable {
-    companion object: JsonSerializer<Station> {
+    val descriptor: HoldingDescriptor,
+) : JsonSerializable {
+    companion object {
         /**
          * Creates a new station from the given [XmlPullParser].
          * @author Arnau Mora
@@ -69,13 +70,15 @@ data class Station(
 
             val timestamp = xmlPubDateFormatter.parse(pubDate!!)
                 ?: throw FormatException("The pubDate's format is not correct")
+            val uid = link!!.substring(link.lastIndexOf('/') + 1)
 
             return timestamp to Station(
                 title!!,
-                link!!.substring(link.lastIndexOf('/') + 1),
+                uid,
                 guid!!,
                 GeoPoint.fromString(point!!),
                 description!!,
+                MeteoclimaticProvider.ProviderDescriptor.provide(uid),
             )
         }
 
@@ -87,22 +90,28 @@ data class Station(
          * @return A new [Station] instance from the data in [json].
          * @throws JSONException When there's an error parsing the JSON object.
          */
-        override fun fromJson(json: JSONObject): Station =
+        @Suppress("UNCHECKED_CAST")
+        fun fromJson(json: JSONObject): Station =
             Station(
                 json.getString("title"),
                 json.getString("uid"),
                 json.getString("guid"),
-                GeoPoint.fromJson(json.getJSONObject("point")),
-                json.takeIf { it.has("description") }?.let { json.getString("description") }
+                json.takeIf { it.has("point") }
+                    ?.getJSONObject("point")
+                    ?.let { GeoPoint.fromJson(it) },
+                json.takeIf { it.has("description") }?.let { json.getString("description") },
+                HoldingDescriptor.fromJson(json.getJSONObject("descriptor")),
             )
     }
 
     val name = title.substring(0, title.lastIndexOf('(')).trim()
 
-    val location = title.substring(
+    val location: String = title.substring(
         title.lastIndexOf('(') + 1,
         title.lastIndexOf(')'),
     )
+
+    val provider: WeatherProvider? = WeatherProvider.firstWithDescriptor(descriptor.name)
 
     override fun toString(): String = uid
 
@@ -125,83 +134,17 @@ data class Station(
         NullPointerException::class,
     )
     @WorkerThread
-    suspend fun fetchWeather(context: Context): WeatherState {
-        Timber.d("Getting station ($this) data from Meteoclimatic...")
-        val url = "https://www.meteoclimatic.net/feed/rss/$uid"
-        val feed: String = try {
-            VolleySingleton
-                .getInstance(context)
-                .getString(url)
-                // Remove all comments otherwise the comments skips them
-                .replace("<!--", "").replace("-->", "")
-                // Remove all data blocks
-                .let {
-                    var fd = it
-                    while (fd.contains("<![CDATA[")) {
-                        val i = fd.indexOf("<![CDATA[")
-                        fd = fd.removeRange(i, fd.indexOf("]]>", i) + 3)
-                    }
-                    fd
-                }
-                // Add new cdata tags
-                .replace("<description>", "<description><![CDATA[")
-                .replace("</description>", "]]></description>")
-        } catch (e: VolleyError) {
-            Timber.e(e, "Could not fetch data from Meteoclimatic ($url).")
-            throw e
-        }
-        val feedResult = parseFeed(feed)
-        val station = feedResult.stations
-            // There should only be one station. Handle null just in case it wasn't found
-            .firstOrNull()
-            ?: throw ArrayIndexOutOfBoundsException("Could not find any stations in feed.")
-        val description = station.description?.split('\n')
-            ?: throw IllegalStateException("Station doesn't have any description data.")
-        val dataRaw = description.find { it.startsWith("[[<$uid") }
-            ?: throw IllegalArgumentException("Could not find weather data in description. Description: $description")
-        val dataBlocks = dataRaw
-            .substring(dataRaw.indexOf(';') + 1, dataRaw.lastIndexOf(">]]"))
-            // Remove all parenthesis
-            .replace("(", "")
-            .replace(")", "")
-            // Replace all colons with dots for float conversion
-            .replace(',', '.')
-            // Split on semicolons
-            .split(';')
-        Timber.i("dataBlocks: {${dataBlocks.joinToString(", ")}}")
-        return WeatherState(
-            feedResult.timestamp,
-            MinMaxValue(
-                dataBlocks[0].toDouble(),
-                dataBlocks[1].toDouble(),
-                dataBlocks[2].toDouble(),
-            ),
-            MinMaxValue(
-                dataBlocks[4].toDouble(),
-                dataBlocks[5].toDouble(),
-                dataBlocks[6].toDouble(),
-            ),
-            MinMaxValue(
-                dataBlocks[7].toDouble(),
-                dataBlocks[8].toDouble(),
-                dataBlocks[9].toDouble(),
-            ),
-            MaxValue(
-                dataBlocks[10].toDouble(),
-                dataBlocks[11].toDouble(),
-            ),
-            dataBlocks[12].toInt(),
-            dataBlocks[13].toDouble(),
-            dataBlocks[3],
-        )
-    }
+    suspend fun fetchWeather(context: Context): WeatherState =
+        provider?.fetchWeather(context, *descriptor.expand())
+            ?: throw IllegalStateException("Could not find provider with descriptor ${descriptor::class.java}")
 
     override fun toJson(): JSONObject = JSONObject().apply {
         put("title", title)
         put("uid", uid)
         put("guid", guid)
-        put("point", point.toJson())
+        put("point", point?.toJson())
         put("description", description)
+        putSerializable("descriptor", descriptor)
     }
 }
 
@@ -212,4 +155,11 @@ val StationSample: Station
         "1234",
         GeoPoint(0.0, 0.0),
         null,
+        object : HoldingDescriptor() {
+            override val name: String = "sample"
+
+            override val data: Map<String, Any> = emptyMap()
+
+            override val parameters: Map<String, KClass<*>> = emptyMap()
+        }
     )

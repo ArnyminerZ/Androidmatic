@@ -6,6 +6,9 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.await
+import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
+import com.arnyminerz.androidmatic.data.providers.WeewxTemplateProvider
+import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.utils.doAsync
 import com.arnyminerz.androidmatic.worker.UpdateDataWorker
 import timber.log.Timber
@@ -16,6 +19,11 @@ class App : Application() {
         super.onCreate()
 
         Timber.plant(Timber.DebugTree())
+
+        Timber.i("Adding to providers registry: ${MeteoclimaticProvider::class}")
+        WeatherProvider.register(MeteoclimaticProvider::class)
+        Timber.i("Adding to providers registry: ${WeewxTemplateProvider::class}")
+        WeatherProvider.register(WeewxTemplateProvider::class)
 
         doAsync {
             WorkManager.getInstance(this@App)

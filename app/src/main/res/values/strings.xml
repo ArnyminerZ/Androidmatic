@@ -4,13 +4,17 @@
     <string name="title_main">@string/app_name</string>
     <string name="title_add_station">Select Stations</string>
     <string name="title_choose_station">Select Station</string>
+    <string name="title_manual_setup">Manual Setup</string>
 
     <string name="action_try_again">Try Again</string>
     <string name="action_clear">Clear</string>
+    <string name="action_check">Check</string>
+    <string name="action_add">Add</string>
 
     <string name="image_desc_close">Close</string>
     <string name="image_desc_add_station">Add Station</string>
     <string name="image_desc_refresh">Refresh</string>
+    <string name="image_desc_manual_configuration">Manual Configuration</string>
     <string name="image_desc_filter_enabled">Filter enabled</string>
     <string name="image_desc_filter_disabled">Filter disabled</string>
     <string name="image_desc_sorting_parameter">Sorting by %s</string>
@@ -33,6 +37,10 @@
     <string name="sort_by_location">Location</string>
     <string name="sort_by_distance">Distance</string>
     <string name="filter_enabled">Enabled</string>
+
+    <string name="manual_provider">Provider</string>
+    <string name="manual_template_url">Meteoclimatic Template Path</string>
+    <string name="manual_template_name">Station Name</string>
 
     <string name="no_stations_found">No stations found</string>
 
@@ -84,4 +92,8 @@
         <item>@string/wind_direction_north_west</item>
         <item>@string/wind_direction_unknown</item>
     </string-array>
+
+    <string name="toast_provider_ok">The url is valid</string>
+    <string name="toast_provider_fail">The url is not valid</string>
+    <string name="toast_provider_data_invalid">The URL is valid, but it\'s returning invalid data.</string>
 </resources>
