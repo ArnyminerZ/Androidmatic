@@ -1,30 +1,20 @@
 package com.arnyminerz.androidmatic.ui.viewmodel
 
 import android.app.Application
-import androidx.annotation.WorkerThread
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import com.android.volley.Request
 import com.android.volley.VolleyError
-import com.android.volley.toolbox.StringRequest
 import com.arnyminerz.androidmatic.data.Station
-import com.arnyminerz.androidmatic.data.parseFeed
-import com.arnyminerz.androidmatic.storage.database.dao.enableStation
-import com.arnyminerz.androidmatic.storage.database.entity.toEntity
+import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
 import com.arnyminerz.androidmatic.singleton.DatabaseSingleton
-import com.arnyminerz.androidmatic.singleton.VolleySingleton
+import com.arnyminerz.androidmatic.storage.database.entity.toEntity
 import com.arnyminerz.androidmatic.utils.launch
-import com.arnyminerz.androidmatic.utils.ui
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * Used for loading data for the main Activity asynchronously. Holds UI states.
@@ -96,42 +86,13 @@ class StationManagerViewModel(app: Application) : AndroidViewModel(app) {
             }
 
             Timber.d("Getting data from Meteoclimatic...")
-            val feed: String? = try {
-                suspendCoroutine { cont ->
-                    VolleySingleton
-                        .getInstance(getApplication())
-                        .addToRequestQueue(
-                            StringRequest(
-                                Request.Method.GET,
-                                "https://www.meteoclimatic.net/feed/rss/ES",
-                                { cont.resume(it) },
-                                { cont.resumeWithException(it) },
-                            )
-                        )
-                }
-            } catch (e: VolleyError) {
-                ui { error = e }
-                Timber.e(e, "Could not fetch data from Meteoclimatic.")
-                null
-            }
-            feed?.let { processStations(it) }
+            MeteoclimaticProvider()
+                .list(getApplication())
+                .map { it.toEntity() }
+                .let { databaseSingleton.stationsDao().insertAll(*it.toTypedArray()) }
 
             loading = false
         }
-    }
-
-    /**
-     * Converts the [feed] into a list of stations, and stores them into the [DatabaseSingleton].
-     * @author Arnau Mora
-     * @since 20220923
-     * @param feed The result obtained from the Meteoclimatic's RSS feed.
-     */
-    @WorkerThread
-    private suspend fun processStations(feed: String) {
-        parseFeed(feed)
-            .stations
-            .map { it.toEntity() }
-            .let { databaseSingleton.stationsDao().insertAll(*it.toTypedArray()) }
     }
 
     fun enableStation(station: Station) =

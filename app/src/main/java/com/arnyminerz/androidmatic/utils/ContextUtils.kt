@@ -4,8 +4,10 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.util.TypedValue
+import android.widget.Toast
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
+import androidx.annotation.UiThread
 import kotlin.reflect.KClass
 
 /**
@@ -31,3 +33,7 @@ fun Context.getColorAttribute(@AttrRes id: Int): Int {
     theme.resolveAttribute(id, typedValue, true)
     return typedValue.data
 }
+
+@UiThread
+fun Context.toast(text: String, duration: Int = Toast.LENGTH_SHORT) =
+    Toast.makeText(this, text, duration).show()
