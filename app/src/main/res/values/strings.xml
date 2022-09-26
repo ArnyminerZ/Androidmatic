@@ -40,6 +40,7 @@
     <string name="sort_by_location">Location</string>
     <string name="sort_by_distance">Distance</string>
     <string name="filter_enabled">Enabled</string>
+    <string name="label_provider">Provider</string>
 
     <string name="manual_provider">Provider</string>
     <string name="manual_template_url">Meteoclimatic Template Path</string>
