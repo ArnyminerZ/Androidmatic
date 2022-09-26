@@ -31,11 +31,16 @@ class WeewxTemplateProvider : WeatherProvider() {
         override val name: String = "weewx_descriptor"
 
         override val parameters: Map<String, KClass<*>> = mapOf(
-            "url" to String::class,
+            "uid" to String::class,
             "name" to String::class,
+            "url" to String::class,
+            "guid" to String::class,
         )
 
-        fun provide(url: String, name: String) = provide("url" to url, "name" to name)
+        override val capabilities: List<Capability> = emptyList()
+
+        fun provide(url: String, name: String, uid: String, guid: String) =
+            provide("url" to url, "name" to name, "uid" to uid, "guid" to guid)
     }
 
     override suspend fun fetch(
@@ -130,12 +135,7 @@ class WeewxTemplateProvider : WeatherProvider() {
             }
         }
         val station = Station(
-            "$name ()",
-            uid!!,
-            guid!!,
-            null,
-            null,
-            descriptor.provide(url, name),
+            descriptor.provide(url, name, uid!!, guid!!),
         )
         val weather = WeatherState(
             timestamp ?: throw ParseException("Could not find timestamp.", 0),

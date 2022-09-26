@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.arnyminerz.androidmatic.data.Station
-import com.arnyminerz.androidmatic.data.numeric.GeoPoint
 import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
 import org.json.JSONObject
 
@@ -12,20 +11,11 @@ import org.json.JSONObject
     tableName = "stations",
 )
 data class StationEntity(
-    @PrimaryKey val uid: String,
-    @ColumnInfo(name = "title") val title: String,
-    @ColumnInfo(name = "guid") val guid: String,
-    @ColumnInfo(name = "latitude") val latitude: Double?,
-    @ColumnInfo(name = "longitude") val longitude: Double?,
+    @PrimaryKey(autoGenerate = true) val id: Int,
     @ColumnInfo(name = "descriptor") val descriptor: String,
 ) {
     fun toStation(): Station =
         Station(
-            title,
-            uid,
-            guid,
-            if (latitude != null && longitude != null) GeoPoint(latitude, longitude) else null,
-            null,
             HoldingDescriptor.fromJson(JSONObject(descriptor))
         )
 }
@@ -37,10 +27,6 @@ data class StationEntity(
  */
 fun Station.toEntity(): StationEntity =
     StationEntity(
-        uid,
-        title,
-        guid,
-        point?.latitude,
-        point?.longitude,
+        0,
         descriptor.toJson().toString()
     )

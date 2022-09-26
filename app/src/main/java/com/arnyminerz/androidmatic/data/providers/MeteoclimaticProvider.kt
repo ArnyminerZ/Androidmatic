@@ -6,6 +6,7 @@ import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.StationFeedResult
 import com.arnyminerz.androidmatic.data.WeatherState
+import com.arnyminerz.androidmatic.data.numeric.GeoPoint
 import com.arnyminerz.androidmatic.data.numeric.MaxValue
 import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
 import com.arnyminerz.androidmatic.data.providers.model.Descriptor
@@ -31,10 +32,33 @@ class MeteoclimaticProvider : WeatherListProvider() {
         override val name: String = "meteoclimatic_descriptor"
 
         override val parameters: Map<String, KClass<*>> = mapOf(
+            "name" to String::class,
             "uid" to String::class,
+            "guid" to String::class,
+            "location" to String::class,
+            "point" to GeoPoint::class,
+            "description" to String::class,
         )
 
-        fun provide(uid: String) = provide("uid" to uid)
+        override val capabilities: List<Capability> =
+            listOf(Capability.LISTING, Capability.LOCATION)
+
+        fun provide(
+            uid: String,
+            name: String,
+            location: String,
+            guid: String,
+            point: GeoPoint,
+            description: String
+        ) =
+            provide(
+                "uid" to uid,
+                "name" to name,
+                "location" to location,
+                "guid" to guid,
+                "point" to point,
+                "description" to description,
+            )
     }
 
     override suspend fun list(context: Context): List<Station> =
@@ -83,18 +107,20 @@ class MeteoclimaticProvider : WeatherListProvider() {
         context: Context,
         vararg params: Pair<String, Any>
     ): WeatherState {
-        val uid = params.find { it.first == "uid" }?.second
+        val uid = (params.find { it.first == "uid" }?.second as? String)
             ?: throw IllegalArgumentException("params doesn't have any \"uid\".")
+        val descriptionRaw = (params.find { it.first == "description" }?.second as? String)
+            ?: throw IllegalArgumentException("params doesn't have any \"description\".")
+
         val feedResult = fetch(context, *params)
         val station = feedResult.stations
             // There should only be one station. Handle null just in case it wasn't found
             .firstOrNull()
             ?: throw ArrayIndexOutOfBoundsException("Could not find any stations in feed.")
-        val description = station.description
-            ?.split('\n')
-            ?.map { it.trim() }
-            ?.filter { it.isNotBlank() }
-            ?: throw IllegalStateException("Station doesn't have any description data.")
+        val description = descriptionRaw
+            .split('\n')
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
         val dataRaw = description
             .find { it.startsWith("[[<$uid", true) }
             ?: throw IllegalArgumentException("Could not find weather data (<$uid) in description. Description: $description")

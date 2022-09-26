@@ -1,5 +1,7 @@
 package com.arnyminerz.androidmatic.utils
 
+import org.json.JSONArray
+
 /**
  * Adds [element] to the collection if not present, or removes it otherwise.
  * @author Arnau Mora
@@ -43,3 +45,23 @@ fun <T> Collection<T>.filterSearch(query: String, predicate: (item: T) -> String
         else
             queryParams.map { value.contains(it) }.allTrue()
     }
+
+fun <T, R : Any?> JSONArray.toList(predicate: (item: T) -> R) =
+    @Suppress("UNCHECKED_CAST")
+    (0 until length()).map { predicate(get(it) as T) }
+
+fun <T : Any, R : Any?> JSONArray.map(block: (value: T) -> R) =
+    (0 until this.length()).map {
+        @Suppress("UNCHECKED_CAST")
+        block(get(it) as T)
+    }
+
+/**
+ * Converts the given list into a [JSONArray].
+ * @author Arnau Mora
+ * @since 20220926
+ * @return A new [JSONArray] with the contents of `this`.
+ */
+fun Iterable<String>.toJSONArray(): JSONArray = JSONArray().apply {
+    forEachIndexed { index, s -> put(index, s) }
+}

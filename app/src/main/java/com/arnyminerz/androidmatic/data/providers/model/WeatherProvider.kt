@@ -2,6 +2,7 @@ package com.arnyminerz.androidmatic.data.providers.model
 
 import android.content.Context
 import androidx.annotation.WorkerThread
+import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.StationFeedResult
 import com.arnyminerz.androidmatic.data.WeatherState
 import com.arnyminerz.androidmatic.utils.takeOrThrow
@@ -33,8 +34,9 @@ abstract class WeatherProvider {
      * @return A new [StationFeedResult] with the loaded data.
      * @throws IllegalArgumentException When the given [params] have some data missing.
      * @throws ParseException When a value is missing on the response to be parsed.
+     * @throws VolleyError When there's an error whilst fetching some data from an API.
      */
-    @Throws(IllegalArgumentException::class, ParseException::class)
+    @Throws(IllegalArgumentException::class, ParseException::class, VolleyError::class)
     @WorkerThread
     abstract suspend fun fetch(
         context: Context,
@@ -93,6 +95,12 @@ abstract class WeatherProvider {
                     .map { buildProvider(it) }
                     .find { provider.providerName == it.providerName }
                     ?.let { throw IllegalArgumentException("Provider named ${it.providerName} already registered.") }
+            }
+            ?.also {
+                if (!it.descriptor.hasParameter("name"))
+                    throw IllegalArgumentException("The provider's descriptor doesn't have a \"name\" field.")
+                if (!it.descriptor.hasParameter("uid"))
+                    throw IllegalArgumentException("The provider's descriptor doesn't have a \"uid\" field.")
             }
             ?.also {
                 providers = providers

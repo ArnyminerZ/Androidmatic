@@ -8,6 +8,7 @@ import com.arnyminerz.androidmatic.data.model.JsonSerializable
 import com.arnyminerz.androidmatic.data.model.putSerializable
 import com.arnyminerz.androidmatic.data.numeric.GeoPoint
 import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
+import com.arnyminerz.androidmatic.data.providers.model.Descriptor
 import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
 import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.utils.readString
@@ -22,11 +23,6 @@ import java.util.Date
 import kotlin.reflect.KClass
 
 data class Station(
-    val title: String,
-    val uid: String,
-    val guid: String,
-    val point: GeoPoint?,
-    val description: String?,
     val descriptor: HoldingDescriptor,
 ) : JsonSerializable {
     companion object {
@@ -71,14 +67,19 @@ data class Station(
             val timestamp = xmlPubDateFormatter.parse(pubDate!!)
                 ?: throw FormatException("The pubDate's format is not correct")
             val uid = link!!.substring(link.lastIndexOf('/') + 1)
+            val name = title!!.substring(0, title.lastIndexOf('(')).trim()
+            val location =
+                title.substring(title.lastIndexOf('(') + 1, title.lastIndexOf(')')).trim()
 
             return timestamp to Station(
-                title!!,
-                uid,
-                guid!!,
-                GeoPoint.fromString(point!!),
-                description!!,
-                MeteoclimaticProvider.ProviderDescriptor.provide(uid),
+                MeteoclimaticProvider.ProviderDescriptor.provide(
+                    uid,
+                    name,
+                    location,
+                    guid!!,
+                    GeoPoint.fromString(point!!),
+                    description ?: String(),
+                ),
             )
         }
 
@@ -93,28 +94,48 @@ data class Station(
         @Suppress("UNCHECKED_CAST")
         fun fromJson(json: JSONObject): Station =
             Station(
-                json.getString("title"),
-                json.getString("uid"),
-                json.getString("guid"),
-                json.takeIf { it.has("point") }
-                    ?.getJSONObject("point")
-                    ?.let { GeoPoint.fromJson(it) },
-                json.takeIf { it.has("description") }?.let { json.getString("description") },
                 HoldingDescriptor.fromJson(json.getJSONObject("descriptor")),
             )
     }
 
-    val name = title.substring(0, title.lastIndexOf('(')).trim()
+    val name: String = descriptor.getValue("name")
 
-    val location: String = title.substring(
-        title.lastIndexOf('(') + 1,
-        title.lastIndexOf(')'),
-    )
+    val uid: String = descriptor.getValue("uid")
 
     val provider: WeatherProvider = WeatherProvider.firstWithDescriptor(descriptor.name)
         ?: throw ClassNotFoundException("Could not find provider with descriptor named ${descriptor.name}")
 
-    override fun toString(): String = uid
+    /**
+     * Gets the value at [key] from [descriptor].
+     * @author Arnau Mora
+     * @since 20220926
+     * @param key The key of the element to get.
+     * @param T The type of the element to get.
+     * @see HoldingDescriptor.get
+     */
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T : Any> get(key: String): T? = descriptor[key] as? T?
+
+    /**
+     * Gets the value at [key] from [descriptor].
+     * @author Arnau Mora
+     * @since 20220926
+     * @param key The key of the element to get.
+     * @param T The type of the element to get.
+     * @see HoldingDescriptor.getValue
+     */
+    fun <T : Any> getValue(key: String): T = descriptor.getValue(key)
+
+    /**
+     * Checks if the descriptor supports a given capability.
+     * @author Arnau Mora
+     * @since 20220926
+     * @param capability The capability to check for.
+     * @return `true` if the descriptor supports [capability], `false` otherwise.
+     */
+    fun descriptorSupports(capability: Descriptor.Capability) = descriptor.supports(capability)
+
+    override fun toString(): String = name
 
     /**
      * Tries to get the station's current weather.
@@ -139,27 +160,19 @@ data class Station(
         provider.fetchWeather(context, *descriptor.expand())
 
     override fun toJson(): JSONObject = JSONObject().apply {
-        put("title", title)
-        put("uid", uid)
-        put("guid", guid)
-        put("point", point?.toJson())
-        put("description", description)
         putSerializable("descriptor", descriptor)
     }
 }
 
 val StationSample: Station
     get() = Station(
-        "Testing Station (Location)",
-        "1234",
-        "1234",
-        GeoPoint(0.0, 0.0),
-        null,
         object : HoldingDescriptor() {
             override val name: String = "sample"
 
-            override val data: Map<String, Any> = emptyMap()
+            override val data: Map<String, Any> = mapOf("name" to "Testing Station")
 
-            override val parameters: Map<String, KClass<*>> = emptyMap()
+            override val parameters: Map<String, KClass<*>> = mapOf("name" to String::class)
+
+            override val capabilities: List<Capability> = emptyList()
         }
     )

@@ -65,7 +65,9 @@ import androidx.compose.ui.unit.sp
 import com.android.volley.TimeoutError
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.Station
+import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
 import com.arnyminerz.androidmatic.data.providers.WeewxTemplateProvider
+import com.arnyminerz.androidmatic.data.providers.model.Descriptor
 import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.storage.database.entity.SelectedStationEntity
 import com.arnyminerz.androidmatic.ui.components.SortingChip
@@ -276,6 +278,7 @@ open class AddStationActivity(
     @Composable
     private fun Contents(onStationTapped: (station: Station) -> Unit) {
         val loading = viewModel.loading
+        val providerDescriptor = MeteoclimaticProvider.ProviderDescriptor
         val stations by viewModel.stationsFlow.collectAsState(initial = emptyList())
         val enabledStations by viewModel.enabledStationsFlow.collectAsState(initial = emptyList())
         val filterLocations = remember { mutableStateListOf<String>() }
@@ -322,73 +325,75 @@ open class AddStationActivity(
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    Icons.Rounded.FilterList,
-                    stringResource(R.string.title_filter_province),
-                    modifier = Modifier.padding(end = 4.dp),
-                )
-                Text(
-                    text = stringResource(R.string.title_filter_province),
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = stringResource(R.string.filter_toggle_all_off),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.tertiary,
+            if (providerDescriptor.supports(Descriptor.Capability.LOCATION)) {
+                Row(
                     modifier = Modifier
-                        .clickable {
-                            // Add all the locations that have already not been added
-                            filterLocations.clear()
-                            filterLocations.addAll(
-                                stations
-                                    .map { it.location }
-                                    // Makes sure there are no duplicates
-                                    .toSet()
-                            )
-                        },
-                )
-            }
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                items(
-                    stations
-                        .map { it.location }
-                        // Set removes duplicates
-                        .toSet()
-                        // Sort alphabetically
-                        .sorted()
-                        // Convert back to list for displaying
-                        .toList(),
-                ) { location ->
-                    val selected = !filterLocations.contains(location)
-                    FilterChip(
-                        selected = selected,
-                        modifier = Modifier
-                            .padding(horizontal = 2.dp),
-                        onClick = {
-                            filterLocations.toggle(location)
-                            Timber.i("Locations: ${filterLocations.joinToString(", ")}")
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Rounded.Check
-                                    .takeIf { selected }
-                                    ?: Icons.Rounded.Close,
-                                stringResource(R.string.image_desc_filter_enabled)
-                                    .takeIf { selected }
-                                    ?: stringResource(R.string.image_desc_filter_disabled),
-                            )
-                        },
-                        label = { Text(location) },
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Rounded.FilterList,
+                        stringResource(R.string.title_filter_province),
+                        modifier = Modifier.padding(end = 4.dp),
                     )
+                    Text(
+                        text = stringResource(R.string.title_filter_province),
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = stringResource(R.string.filter_toggle_all_off),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier
+                            .clickable {
+                                // Add all the locations that have already not been added
+                                filterLocations.clear()
+                                filterLocations.addAll(
+                                    stations
+                                        .map { it.getValue<String>("location") }
+                                        // Makes sure there are no duplicates
+                                        .toSet()
+                                )
+                            },
+                    )
+                }
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    items(
+                        stations
+                            .map { it.getValue<String>("location") }
+                            // Set removes duplicates
+                            .toSet()
+                            // Sort alphabetically
+                            .sorted()
+                            // Convert back to list for displaying
+                            .toList(),
+                    ) { location ->
+                        val selected = !filterLocations.contains(location)
+                        FilterChip(
+                            selected = selected,
+                            modifier = Modifier
+                                .padding(horizontal = 2.dp),
+                            onClick = {
+                                filterLocations.toggle(location)
+                                Timber.i("Locations: ${filterLocations.joinToString(", ")}")
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Rounded.Check
+                                        .takeIf { selected }
+                                        ?: Icons.Rounded.Close,
+                                    stringResource(R.string.image_desc_filter_enabled)
+                                        .takeIf { selected }
+                                        ?: stringResource(R.string.image_desc_filter_disabled),
+                                )
+                            },
+                            label = { Text(location) },
+                        )
+                    }
                 }
             }
             Row(
@@ -479,7 +484,10 @@ open class AddStationActivity(
                     ),
                 ) { station ->
                     var checkboxLoading by remember { mutableStateOf(false) }
-                    if (!filterLocations.contains(station.location))
+                    if (!providerDescriptor.supports(Descriptor.Capability.LOCATION) || !filterLocations.contains(
+                            station["location"]
+                        )
+                    )
                         StationCard(
                             station,
                             modifier = Modifier.clickable(enabled = single) {
@@ -681,13 +689,13 @@ open class AddStationActivity(
         sortingBy: Int,
         filterEnabled: Boolean,
     ) = stations
-        .filterSearch(filterSearch) { it.title }
+        .filterSearch(filterSearch) { it.getValue("name") }
         .filter { s -> !filterEnabled || enabledStations.find { it.stationUid == s.uid } != null }
         .sortedBy {
             when (sortingBy) {
                 0 -> it.name
-                1 -> it.location
-                else -> it.title
+                1 -> it["location"]
+                else -> it.name
             }
         }
 

@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import com.android.volley.TimeoutError
 import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
@@ -86,11 +87,16 @@ class StationManagerViewModel(app: Application) : AndroidViewModel(app) {
                 databaseSingleton.stationsDao().deleteAll()
             }
 
-            Timber.d("Getting data from Meteoclimatic...")
-            MeteoclimaticProvider()
-                .list(getApplication())
-                .map { it.toEntity() }
-                .let { databaseSingleton.stationsDao().insertAll(*it.toTypedArray()) }
+            try {
+                Timber.d("Getting data from Meteoclimatic...")
+                MeteoclimaticProvider()
+                    .list(getApplication())
+                    .map { it.toEntity() }
+                    .let { databaseSingleton.stationsDao().insertAll(*it.toTypedArray()) }
+            } catch (e: TimeoutError) {
+                Timber.e(e, "Could not load Meteoclimatic's data. Connection timed out.")
+                error = e
+            }
 
             loading = false
         }

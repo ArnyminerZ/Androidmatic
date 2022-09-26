@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.androidmatic.data.Station
+import com.arnyminerz.androidmatic.data.providers.model.Descriptor
 
 @Composable
 @ExperimentalMaterial3Api
@@ -42,10 +43,11 @@ fun StationCard(
                     text = station.name,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                Text(
-                    text = station.location,
-                    style = MaterialTheme.typography.labelMedium,
-                )
+                if (station.descriptorSupports(Descriptor.Capability.LOCATION))
+                    Text(
+                        text = station.getValue<String>("location"),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
             }
             if (showCheckbox)
                 Checkbox(
