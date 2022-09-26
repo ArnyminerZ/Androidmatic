@@ -17,7 +17,7 @@ class WeatherWidgetConfigurationActivity : AddStationActivity(
         finish()
     },
 ) {
-    override fun onSelectStation(station: Station) {
+    override val onSelectStation: ((station: Station) -> Unit) = { station ->
         Timber.i("Selected $station.")
 
         val context = this

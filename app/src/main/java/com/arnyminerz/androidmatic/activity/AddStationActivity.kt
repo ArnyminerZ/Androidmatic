@@ -540,7 +540,7 @@ open class AddStationActivity(
                             station,
                             modifier = Modifier.clickable(enabled = single) {
                                 onStationTapped(station)
-                                onSelectStation(station)
+                                onSelectStation?.let { it(station) }
                             },
                             checkboxEnabled = !checkboxLoading,
                             checked = enabledStations.find { it.stationUid == station.uid } != null,
@@ -695,14 +695,22 @@ open class AddStationActivity(
                         enabled = false
                         doAsync {
                             try {
-                                WeatherProvider
+                                val station = WeatherProvider
                                     .firstWithDescriptor(WeewxTemplateProvider.ProviderDescriptor.name)
-                                    ?.fetch(context, "name" to stationName, "url" to templateUrl)
+                                    ?.fetch(
+                                        context,
+                                        "name" to stationName,
+                                        "url" to templateUrl
+                                    )
                                     ?.takeIf { it.stations.isNotEmpty() }
                                     ?.also { Timber.i("Station is fine!") }
-                                    ?.let { (_, stations) -> viewModel.enableStation(stations[0]) }
-                                    ?.also { onBack(0, true) {} }
-                                    ?: ui { toast(getString(R.string.toast_provider_fail)) }
+                                    ?.stations
+                                    ?.get(0)
+                                    ?: return@doAsync ui { toast(getString(R.string.toast_provider_fail)) }
+                                onSelectStation?.invoke(station)
+                                    ?: station
+                                        .let { viewModel.enableStation(it) }
+                                        .also { onBack(0, true) {} }
                             } catch (e: NullPointerException) {
                                 Timber.e(
                                     e,
@@ -748,5 +756,5 @@ open class AddStationActivity(
         }
 
     // Only used by extension activities
-    protected open fun onSelectStation(station: Station) {}
+    protected open val onSelectStation: ((station: Station) -> Unit)? = null
 }
