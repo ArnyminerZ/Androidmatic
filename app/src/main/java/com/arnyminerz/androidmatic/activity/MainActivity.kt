@@ -176,7 +176,11 @@ class MainActivity : AppCompatActivity() {
                             viewModel.loadWeather(selectedStation)
 
                             weatherMap[selectedStation.id]?.let {
-                                WeatherCard(it)
+                                WeatherCard(it) {
+                                    return@WeatherCard viewModel.disableStation(
+                                        selectedStation
+                                    )
+                                }
                             }
                         }
                     }

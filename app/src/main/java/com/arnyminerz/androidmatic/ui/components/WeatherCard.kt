@@ -1,24 +1,39 @@
 package com.arnyminerz.androidmatic.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material.icons.rounded.WaterDrop
 import androidx.compose.material.icons.rounded.WbCloudy
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -33,17 +48,66 @@ import com.arnyminerz.androidmatic.data.WeatherState
 import com.arnyminerz.androidmatic.data.numeric.MaxValue
 import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
 import com.arnyminerz.androidmatic.utils.shortTime
+import kotlinx.coroutines.Job
 import java.util.Calendar
 import java.util.Date
 
 @Composable
-fun WeatherCard(weather: WeatherState?) {
+@ExperimentalMaterial3Api
+fun WeatherCard(weather: WeatherState?, onDeleteRequested: (() -> Job)?) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog && weather != null)
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text(stringResource(R.string.dialog_action_close))
+                }
+            },
+            title = { Text(text = weather.stationName) },
+            text = {
+                var enabled by remember { mutableStateOf(true) }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                ) {
+                    if (onDeleteRequested != null)
+                        ListItem(
+                            headlineText = { Text(text = stringResource(R.string.dialog_action_delete)) },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    stringResource(R.string.dialog_action_delete),
+                                )
+                            },
+                            modifier = Modifier
+                                .clickable(enabled = enabled, onClick = {
+                                    enabled = true
+                                    onDeleteRequested().invokeOnCompletion {
+                                        enabled = true
+                                        showDialog = false
+                                    }
+                                }),
+                        )
+                }
+            },
+        )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        showDialog = true
+                    },
+                )
+            },
     ) {
         Row(
             modifier = Modifier
@@ -51,7 +115,8 @@ fun WeatherCard(weather: WeatherState?) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = weather?.stationName ?: "Loading...", // TODO: Localize
+                text = weather?.stationName
+                    ?: stringResource(R.string.state_loading), // TODO: Localize
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -78,7 +143,7 @@ fun WeatherCard(weather: WeatherState?) {
             ) {
                 Image(
                     painter = painterResource(
-                        when(weather.literalState) {
+                        when (weather.literalState) {
                             "sun" -> R.drawable.weather_sunny
                             "moon" -> R.drawable.weather_moon
                             "hazesun" -> R.drawable.weather_haze
@@ -146,13 +211,14 @@ fun WeatherCard(weather: WeatherState?) {
     }
 }
 
-class WeatherCardLiteralStateProvider: PreviewParameterProvider<@WeatherLiteral String> {
+class WeatherCardLiteralStateProvider : PreviewParameterProvider<@WeatherLiteral String> {
     override val values: Sequence<@WeatherLiteral String> =
         sequenceOf("sun", "hazesun", "suncloud", "rain", "fog", "moon", "hazemoon", "unknown")
 }
 
 @Preview
 @Composable
+@ExperimentalMaterial3Api
 fun WeatherCardPreview(
     @PreviewParameter(WeatherCardLiteralStateProvider::class) literalState: String,
 ) {
@@ -179,6 +245,7 @@ fun WeatherCardPreview(
             30,
             0.0,
             literalState,
-        )
+        ),
+        null,
     )
 }
