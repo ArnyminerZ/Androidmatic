@@ -11,4 +11,6 @@ data class SelectedStationEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "station_uid") val stationUid: String,
     @ColumnInfo(name = "descriptor") val customDescriptor: String,
-)
+) {
+    override fun toString(): String = stationUid
+}
