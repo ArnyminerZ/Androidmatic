@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.sp
 import com.android.volley.TimeoutError
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.Station
-import com.arnyminerz.androidmatic.data.providers.MeteoclimaticProvider
 import com.arnyminerz.androidmatic.data.providers.WeewxTemplateProvider
 import com.arnyminerz.androidmatic.data.providers.model.Descriptor
 import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
@@ -145,6 +144,10 @@ open class AddStationActivity(
         Timber.d("Loading stations...")
         viewModel.loadStations()
 
+        Timber.d("Loading list providers...")
+        val availableListProviders =
+            WeatherProvider.getWithCapabilities(Descriptor.Capability.LISTING)
+
         setThemedContent {
             val scope = rememberCoroutineScope()
             val pagerState = rememberPagerState(1)
@@ -214,7 +217,7 @@ open class AddStationActivity(
                         .padding(paddingValues)
                         .fillMaxSize(),
                 ) {
-                    Pager(pagerState)
+                    Pager(availableListProviders, pagerState)
 
                     val error = viewModel.error
 
@@ -260,7 +263,7 @@ open class AddStationActivity(
 
     @Composable
     @ExperimentalPagerApi
-    private fun Pager(pagerState: PagerState) {
+    private fun Pager(availableListProviders: List<WeatherProvider>, pagerState: PagerState) {
         val scope = rememberCoroutineScope()
         HorizontalPager(
             count = 2,
@@ -269,16 +272,26 @@ open class AddStationActivity(
         ) {
             when (it) {
                 0 -> CustomStation()
-                1 -> Contents { scope.launch { pagerState.animateScrollToPage(2) } }
+                1 -> Contents(availableListProviders) {
+                    scope.launch {
+                        pagerState.animateScrollToPage(
+                            2
+                        )
+                    }
+                }
                 2 -> LoadingPage()
             }
         }
     }
 
     @Composable
-    private fun Contents(onStationTapped: (station: Station) -> Unit) {
+    private fun Contents(
+        availableListProviders: List<WeatherProvider>,
+        onStationTapped: (station: Station) -> Unit
+    ) {
         val loading = viewModel.loading
-        val providerDescriptor = MeteoclimaticProvider.ProviderDescriptor
+        var selectedProvider by remember { mutableStateOf(0) }
+        val providerDescriptor = availableListProviders[selectedProvider].descriptor
         val stations by viewModel.stationsFlow.collectAsState(initial = emptyList())
         val enabledStations by viewModel.enabledStationsFlow.collectAsState(initial = emptyList())
         val filterLocations = remember { mutableStateListOf<String>() }
@@ -325,6 +338,41 @@ open class AddStationActivity(
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             )
+
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                var providersExpanded by remember { mutableStateOf(false) }
+                OutlinedTextField(
+                    value = availableListProviders[selectedProvider].displayName,
+                    onValueChange = {},
+                    enabled = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable { providersExpanded = true },
+                    label = { Text(stringResource(R.string.label_provider)) },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                )
+                DropdownMenu(
+                    expanded = providersExpanded,
+                    onDismissRequest = { providersExpanded = false },
+                ) {
+                    availableListProviders.forEachIndexed { index, provider ->
+                        DropdownMenuItem(
+                            text = { Text(provider.displayName) },
+                            onClick = {
+                                selectedProvider = index
+                                providersExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
+
             if (providerDescriptor.supports(Descriptor.Capability.LOCATION)) {
                 Row(
                     modifier = Modifier
