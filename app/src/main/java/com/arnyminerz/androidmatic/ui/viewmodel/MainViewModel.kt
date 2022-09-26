@@ -159,4 +159,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         else launch { }
+
+    /**
+     * Disables a given station.
+     * @author Arnau Mora
+     * @since 20220926
+     * @param station The station to disable.
+     * @return A job that supervises the progress of the deletion.
+     */
+    fun disableStation(station: SelectedStationEntity) = launch {
+        databaseSingleton
+            .stationsDao()
+            .disableStation(station.id)
+    }
 }
