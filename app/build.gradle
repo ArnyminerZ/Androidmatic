@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.devtools.ksp' version '1.7.10-1.0.6'
+    id 'com.google.devtools.ksp' version "$kotlin_version-1.0.6"
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
 }
@@ -106,7 +106,7 @@ dependencies {
     implementation "androidx.work:work-runtime-ktx:$work_version"
 
     // Kotlin reflect for generic classes
-    implementation "org.jetbrains.kotlin:kotlin-reflect:1.7.10"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     // Testing libraries
     testImplementation 'junit:junit:4.13.2'
