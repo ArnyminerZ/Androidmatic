@@ -4,6 +4,7 @@ plugins {
     id 'com.google.devtools.ksp' version "$kotlin_version-1.0.6"
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
+    id 'org.jetbrains.dokka'
 }
 
 android {
@@ -52,6 +53,14 @@ android {
     packagingOptions {
         resources {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+}
+
+dokkaHtml.configure {
+    dokkaSourceSets {
+        named("main") {
+            noAndroidSdkLink.set(false)
         }
     }
 }
@@ -107,6 +116,9 @@ dependencies {
 
     // Kotlin reflect for generic classes
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    // Dokka documentation dependencies
+    dokkaHtmlPlugin "org.jetbrains.dokka:kotlin-as-java-plugin:$kotlin_version"
 
     // Testing libraries
     testImplementation 'junit:junit:4.13.2'
