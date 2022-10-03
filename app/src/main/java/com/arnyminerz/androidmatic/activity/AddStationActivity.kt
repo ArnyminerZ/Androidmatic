@@ -1,5 +1,7 @@
 package com.arnyminerz.androidmatic.activity
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Sort
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -67,6 +70,7 @@ import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.providers.WeewxTemplateProvider
 import com.arnyminerz.androidmatic.data.providers.model.Descriptor
+import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
 import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.storage.database.entity.SelectedStationEntity
 import com.arnyminerz.androidmatic.ui.components.SortingChip
@@ -76,6 +80,7 @@ import com.arnyminerz.androidmatic.ui.theme.setThemedContent
 import com.arnyminerz.androidmatic.ui.viewmodel.StationManagerViewModel
 import com.arnyminerz.androidmatic.utils.doAsync
 import com.arnyminerz.androidmatic.utils.filterSearch
+import com.arnyminerz.androidmatic.utils.json
 import com.arnyminerz.androidmatic.utils.toast
 import com.arnyminerz.androidmatic.utils.toggle
 import com.arnyminerz.androidmatic.utils.ui
@@ -83,6 +88,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import com.google.firebase.dynamiclinks.ktx.dynamicLinks
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.text.ParseException
@@ -148,13 +155,52 @@ open class AddStationActivity(
         val availableListProviders =
             WeatherProvider.getWithCapabilities(Descriptor.Capability.LISTING)
 
+        val clipboardContentState = mutableStateOf<SelectedStationEntity?>(null)
+        (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
+            .takeIf { it.hasPrimaryClip() }
+            ?.let { it.primaryClip?.getItemAt(0) }
+            ?.uri
+            ?.takeIf { it.host == "androidmatic.page.link" }
+            ?.let { Firebase.dynamicLinks.getDynamicLink(it) }
+            ?.addOnSuccessListener {
+                try {
+                    clipboardContentState.value = SelectedStationEntity.fromDynamicLink(it)
+                } catch (e: Exception) {
+                    Timber.e(e, "Could not parse clipboard contents")
+                }
+            }
+            ?.addOnFailureListener { Timber.e(it, "Could not load dynamic link.") }
+
         setThemedContent {
             val scope = rememberCoroutineScope()
             val pagerState = rememberPagerState(1)
+            val clipboardContent by clipboardContentState
 
             BackHandler {
                 onBack(pagerState.currentPage) { scope.launch { pagerState.animateScrollToPage(1) } }
             }
+
+            if (clipboardContent != null)
+                AlertDialog(
+                    onDismissRequest = { clipboardContentState.value = null },
+                    title = { Text(stringResource(R.string.dialog_clipboard_data_title)) },
+                    text = {
+                        val descriptor =
+                            HoldingDescriptor.fromJson(clipboardContent!!.customDescriptor.json)
+                        val name = descriptor.getValue<String>("name")
+                        Text(stringResource(R.string.dialog_clipboard_data_message, name))
+                    },
+                    confirmButton = {
+                        Button(onClick = { clipboardContentState.value = null }) {
+                            Text(stringResource(R.string.dialog_action_close))
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { clipboardContentState.value = null }) {
+                            Text(stringResource(R.string.dialog_action_close))
+                        }
+                    },
+                )
 
             Scaffold(
                 topBar = {
