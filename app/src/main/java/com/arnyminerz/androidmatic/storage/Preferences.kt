@@ -1,16 +1,14 @@
 package com.arnyminerz.androidmatic.storage
 
 import android.content.Context
-import androidx.annotation.WorkerThread
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.arnyminerz.androidmatic.data.model.JsonSerializable
 import com.arnyminerz.androidmatic.utils.doAsync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -30,6 +28,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "an
 object Keys {
     val ANALYTICS_COLLECTION = booleanPreferencesKey("analytics")
     val CRASH_COLLECTION = booleanPreferencesKey("crash")
+    val LAST_WORKER_RUN = longPreferencesKey("last_worker_run")
 }
 
 /**
