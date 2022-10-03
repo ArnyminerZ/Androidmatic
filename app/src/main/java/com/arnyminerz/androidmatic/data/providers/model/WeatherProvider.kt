@@ -90,10 +90,15 @@ abstract class WeatherProvider {
          * @since 20220926
          * @param providerClass The class of the [WeatherProvider] to add.
          * @return The built provider if valid.
-         * @throws IllegalArgumentException If the given provider is already registered.
+         * @throws IllegalStateException If the given provider is already registered.
+         * @throws IllegalArgumentException If the given provider is malformed.
          * @throws InvalidClassException If the given provider doesn't have a valid constructor.
          */
-        @Throws(IllegalArgumentException::class, InvalidClassException::class)
+        @Throws(
+            IllegalStateException::class,
+            IllegalArgumentException::class,
+            InvalidClassException::class
+        )
         fun register(providerClass: KClass<*>) = providerClass
             .tryTaking { buildProvider(it) }
             ?.also { provider ->
@@ -102,7 +107,7 @@ abstract class WeatherProvider {
                     // constructed.
                     .map { buildProvider(it) }
                     .find { provider.providerName == it.providerName }
-                    ?.let { throw IllegalArgumentException("Provider named ${it.providerName} already registered.") }
+                    ?.let { throw IllegalStateException("Provider named ${it.providerName} already registered.") }
             }
             ?.also {
                 // Ensure required parameters
