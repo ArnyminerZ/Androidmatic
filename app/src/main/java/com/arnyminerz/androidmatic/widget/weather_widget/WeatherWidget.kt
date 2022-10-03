@@ -13,6 +13,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.LocalContext
 import androidx.glance.LocalGlanceId
 import androidx.glance.LocalSize
+import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
@@ -37,6 +38,7 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.arnyminerz.androidmatic.R
+import com.arnyminerz.androidmatic.activity.MainActivity
 import com.arnyminerz.androidmatic.widget.GlanceTheme
 import com.arnyminerz.androidmatic.widget.TintImage
 import org.json.JSONObject
@@ -126,7 +128,8 @@ class WeatherWidget : GlanceAppWidget() {
                 .fillMaxSize()
                 .appWidgetBackground()
                 .background(backgroundColor)
-                .cornerRadius(24.dp),
+                .cornerRadius(24.dp)
+                .clickable(actionStartActivity(MainActivity::class.java)),
         ) {
             Column(
                 modifier = GlanceModifier
