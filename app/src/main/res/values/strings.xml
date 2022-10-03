@@ -72,7 +72,9 @@
     <string name="settings_error_enabled_summary">If enabled, the app will send information to the developer whenever the app crashes, or there\'s an error. This makes the process of diagnosing and fixing errors so much easier. This information contains app logs, and some information about the device you are running, and the software it\'s running.</string>
     <string name="settings_service_title">Background Service</string>
     <string name="settings_service_running">Weather updates are being fetched in background every %d minutes. Last run: %s</string>
+    <string name="settings_service_running_never">Weather updates are being fetched in background every %d minutes. Still not run any time.</string>
     <string name="settings_service_schedule">Weather updates are not running, press here to enable.</string>
+    <string name="settings_info">Version: %s (%d)</string>
 
     <string name="widget_weather_description">A widget that displays the current weather of a desired station.</string>
     <string name="widget_loading">Loading…</string>
