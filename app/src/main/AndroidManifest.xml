@@ -43,7 +43,9 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.AddStationActivity" />
+        <activity
+            android:name=".activity.AddStationActivity"
+            android:parentActivityName=".activity.MainActivity" />
         <activity
             android:name=".activity.WeatherWidgetConfigurationActivity"
             android:exported="true">
