@@ -29,6 +29,19 @@
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
+
+            <intent-filter
+                android:autoVerify="true"
+                android:label="@string/filter_add_station">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="androidmatic.page.link"
+                    android:scheme="https" />
+            </intent-filter>
         </activity>
         <activity android:name=".activity.AddStationActivity" />
         <activity
