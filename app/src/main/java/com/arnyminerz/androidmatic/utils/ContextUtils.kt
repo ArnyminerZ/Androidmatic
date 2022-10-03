@@ -39,6 +39,10 @@ fun Context.getColorAttribute(@AttrRes id: Int): Int {
 fun Context.toast(text: String, duration: Int = Toast.LENGTH_SHORT) =
     Toast.makeText(this, text, duration).show()
 
+@UiThread
+fun Context.toast(@StringRes text: Int, duration: Int = Toast.LENGTH_SHORT) =
+    Toast.makeText(this, text, duration).show()
+
 /**
  * Runs [AndroidViewModel.getApplication] as [Context].
  * @author Arnau Mora
