@@ -637,27 +637,29 @@ open class AddStationActivity(
             var providerExpanded by remember { mutableStateOf(false) }
             var provider by remember { mutableStateOf("") }
 
-            OutlinedTextField(
-                value = provider,
-                onValueChange = {},
-                enabled = false,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { providerExpanded = true },
-                label = { Text(stringResource(R.string.manual_provider)) },
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledLabelColor = MaterialTheme.colorScheme.tertiary,
-                ),
-            )
-            DropdownMenu(
-                expanded = providerExpanded,
-                onDismissRequest = { providerExpanded = false },
-            ) {
-                DropdownMenuItem(
-                    text = { Text("WeeWX") },
-                    onClick = { provider = "WeeWX"; providerExpanded = false },
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = provider,
+                    onValueChange = {},
+                    enabled = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { providerExpanded = true },
+                    label = { Text(stringResource(R.string.manual_provider)) },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledLabelColor = MaterialTheme.colorScheme.tertiary,
+                    ),
                 )
+                DropdownMenu(
+                    expanded = providerExpanded,
+                    onDismissRequest = { providerExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("WeeWX") },
+                        onClick = { provider = "WeeWX"; providerExpanded = false },
+                    )
+                }
             }
 
             AnimatedVisibility(visible = provider == "WeeWX") { ManualSetupWeeWX() }
