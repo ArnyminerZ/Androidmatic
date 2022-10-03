@@ -14,7 +14,7 @@ abstract class Descriptor {
      * @author Arnau Mora
      * @since 20220926
      */
-    protected abstract val capabilities: List<Capability>
+    abstract val capabilities: List<Capability>
 
     /**
      * Checks if the descriptor supports a [Capability].
@@ -34,6 +34,17 @@ abstract class Descriptor {
      */
     fun hasParameter(key: String): Boolean =
         parameters.containsKey(key)
+
+    /**
+     * Checks if the [Descriptor] has a parameter with the given key that matches a given type.
+     * @author Arnau Mora
+     * @since 20221001
+     * @param key The key to search for.
+     * @param type The type the key is supposed to have.
+     * @return `true` if the parameter key is present, and the set type matches type. `false` otherwise.
+     */
+    fun hasParameterOfType(key: String, type: KClass<*>): Boolean =
+        parameters[key] == type
 
     /**
      * Generates a [HoldingDescriptor] from some parameters and the defined data in `this`.
@@ -69,7 +80,7 @@ abstract class Descriptor {
                                 (e as? String)?.replace(
                                     "\n",
                                     "\\n"
-                                ) ?: e
+                                )
                             }
                         }"
                     }
@@ -85,8 +96,8 @@ abstract class Descriptor {
     }
 
     enum class Capability(
-        // TODO: Check that all parameters are given somewhere
         val requireParameters: Map<String, KClass<*>> = emptyMap(),
+        val requireExtends: KClass<*>? = null,
     ) {
         /**
          * Indicates that the provider supports listing for available stations. Because of this, the
@@ -94,7 +105,7 @@ abstract class Descriptor {
          * @author Arnau Mora
          * @since 20220926
          */
-        LISTING,
+        LISTING(requireExtends = WeatherListProvider::class),
 
         /**
          * Indicates that the provider has information about the location of the station. This
@@ -110,6 +121,8 @@ abstract class Descriptor {
          * @author Arnau Mora
          * @since 20221003
          */
-        MANUAL_SETUP,
+        MANUAL_SETUP(requireExtends = WeatherManualProvider::class),
     }
 }
+
+fun Map<String, KClass<*>>.paramsString() = map { "${it.key}::${it.value.simpleName}" }
