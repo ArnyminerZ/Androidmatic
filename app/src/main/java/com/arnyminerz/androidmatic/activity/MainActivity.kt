@@ -1,6 +1,5 @@
 package com.arnyminerz.androidmatic.activity
 
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -51,7 +50,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.os.LocaleListCompat
 import com.arnyminerz.androidmatic.BuildConfig
 import com.arnyminerz.androidmatic.R
-import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
 import com.arnyminerz.androidmatic.data.ui.NavigationBarItem
 import com.arnyminerz.androidmatic.storage.Keys
 import com.arnyminerz.androidmatic.storage.dataStore
@@ -82,13 +80,11 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.dynamiclinks.PendingDynamicLinkData
 import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.json.JSONException
-import org.json.JSONObject
 import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -216,29 +212,11 @@ class MainActivity : AppCompatActivity() {
     )
     private suspend fun loadDynamicLinks() = suspendCoroutine { cont ->
         Firebase.dynamicLinks.getDynamicLink(intent)
-            .addOnSuccessListener(this) { pendingDynamicLinkData: PendingDynamicLinkData? ->
+            .addOnSuccessListener(this) { link ->
                 try {
-                    // Get deep link from result (may be null if no link is found)
-                    val deepLink: Uri = pendingDynamicLinkData?.link
-                        ?: throw NullPointerException("The dynamic link doesn't have any deep link.")
+                    val selectedStationEntity = SelectedStationEntity.fromDynamicLink(link)
 
-                    Timber.i("Link: $deepLink. Extensions: ${pendingDynamicLinkData.extensions}")
-
-                    Timber.i("Loading link...")
-                    if (!deepLink.queryParameterNames.contains("descriptor"))
-                        throw IllegalStateException("The deep link doesn't contain any descriptor: $deepLink")
-                    val rawDescriptorJson: String = deepLink.getQueryParameter("descriptor")!!
-                    val descriptor = try {
-                        val jsonObject = JSONObject(rawDescriptorJson)
-                        HoldingDescriptor.fromJson(jsonObject)
-                    } catch (e: JSONException) {
-                        Timber.e(e, "Could not parse descriptor JSON: $rawDescriptorJson")
-                        throw e
-                    }
-                    val uid = descriptor.getValue<String>("uid")
-                    val selectedStationEntity = SelectedStationEntity(0, uid, rawDescriptorJson)
-
-                    Timber.i("Adding station $uid from ${descriptor.name}.")
+                    Timber.i("Adding station ${selectedStationEntity.stationUid}...")
                     cont.resume(viewModel.enableStation(selectedStationEntity))
                 } catch (e: Exception) {
                     cont.resumeWithException(e)
