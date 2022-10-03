@@ -1,5 +1,6 @@
 package com.arnyminerz.androidmatic.activity
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -36,9 +37,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arnyminerz.androidmatic.R
+import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
 import com.arnyminerz.androidmatic.data.ui.NavigationBarItem
 import com.arnyminerz.androidmatic.storage.Keys
 import com.arnyminerz.androidmatic.storage.dataStore
+import com.arnyminerz.androidmatic.storage.database.entity.SelectedStationEntity
 import com.arnyminerz.androidmatic.storage.get
 import com.arnyminerz.androidmatic.storage.getAsState
 import com.arnyminerz.androidmatic.storage.set
@@ -53,6 +56,7 @@ import com.arnyminerz.androidmatic.ui.viewmodel.ERROR_TIMEOUT
 import com.arnyminerz.androidmatic.ui.viewmodel.MainViewModel
 import com.arnyminerz.androidmatic.utils.doAsync
 import com.arnyminerz.androidmatic.utils.launch
+import com.arnyminerz.androidmatic.utils.toast
 import com.arnyminerz.androidmatic.worker.UpdateDataOptions
 import com.arnyminerz.androidmatic.worker.UpdateDataWorker
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -62,8 +66,13 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.dynamiclinks.PendingDynamicLinkData
+import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import org.json.JSONException
+import org.json.JSONObject
+import timber.log.Timber
 import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
@@ -72,6 +81,33 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Firebase.dynamicLinks
+            .getDynamicLink(intent)
+            .addOnSuccessListener(this) { pendingDynamicLinkData: PendingDynamicLinkData? ->
+                // Get deep link from result (may be null if no link is found)
+                val deepLink: Uri = pendingDynamicLinkData?.link ?: return@addOnSuccessListener
+
+                Timber.i("Link: $deepLink. Extensions: ${pendingDynamicLinkData.extensions}")
+
+                Timber.i("Loading link...")
+                if (!deepLink.queryParameterNames.contains("descriptor"))
+                    return@addOnSuccessListener toast(R.string.toast_link_invalid)
+                val rawDescriptorJson: String = deepLink.getQueryParameter("descriptor")!!
+                val descriptor = try {
+                    val jsonObject = JSONObject(rawDescriptorJson)
+                    HoldingDescriptor.fromJson(jsonObject)
+                } catch (e: JSONException) {
+                    Timber.e(e, "Could not parse descriptor JSON: $rawDescriptorJson")
+                    return@addOnSuccessListener toast(R.string.toast_link_invalid)
+                }
+                val uid = descriptor.getValue<String>("uid")
+                val selectedStationEntity = SelectedStationEntity(0, uid, rawDescriptorJson)
+
+                Timber.i("Adding station $uid from ${descriptor.name}.")
+                viewModel.enableStation(selectedStationEntity)
+            }
+            .addOnFailureListener(this) { e -> Timber.w(e, "getDynamicLink:onFailure") }
 
         setThemedContent {
             val scope = rememberCoroutineScope()
@@ -182,7 +218,7 @@ class MainActivity : AppCompatActivity() {
                             viewModel.loadWeather(selectedStation)
 
                             weatherMap[selectedStation.id]?.let {
-                                WeatherCard(it) {
+                                WeatherCard(it, selectedStation.customDescriptor) {
                                     return@WeatherCard viewModel.disableStation(
                                         selectedStation
                                     )
