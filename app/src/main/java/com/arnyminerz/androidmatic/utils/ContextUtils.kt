@@ -7,6 +7,7 @@ import android.util.TypedValue
 import android.widget.Toast
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
+import androidx.annotation.StringRes
 import androidx.annotation.UiThread
 import androidx.lifecycle.AndroidViewModel
 import kotlin.reflect.KClass
@@ -50,3 +51,21 @@ fun Context.toast(@StringRes text: Int, duration: Int = Toast.LENGTH_SHORT) =
  */
 val AndroidViewModel.context: Context
     get() = getApplication()
+
+/**
+ * Opens a share dialog with the text specified.
+ * @author Arnau Mora
+ * @since 20221003
+ * @param text The text to share.
+ */
+@UiThread
+fun Context.share(text: String) {
+    val sendIntent: Intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, text)
+        type = "text/plain"
+    }
+
+    val shareIntent = Intent.createChooser(sendIntent, null)
+    startActivity(shareIntent)
+}
