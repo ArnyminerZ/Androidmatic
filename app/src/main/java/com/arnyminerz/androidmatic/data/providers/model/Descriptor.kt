@@ -87,6 +87,13 @@ abstract class Descriptor {
                 }) have some parameters missing ($parameters) or types do not match."
             )
 
+    /**
+     * Checks if a list of parameters is correct.
+     * @author Arnau Mora
+     * @since 20221003
+     * @param params The parameters to check for.
+     * @see hasParameterOfType
+     */
     fun check(vararg params: Pair<String, Any>): Boolean {
         for (param in parameters) {
             val parameter = params.find { it.first == param.key } ?: return false
