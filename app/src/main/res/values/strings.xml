@@ -14,8 +14,11 @@
     <string name="dialog_action_close">Close</string>
     <string name="dialog_action_delete">Delete</string>
     <string name="dialog_action_share">Share</string>
+    <string name="dialog_action_load">Load</string>
 
     <string name="dialog_language_title">Language Selection</string>
+    <string name="dialog_clipboard_data_title">Clipboard contains station</string>
+    <string name="dialog_clipboard_data_message">You have a link in your clipboard with a station, do you want to import it? Station name: %s</string>
 
     <string name="image_desc_close">Close</string>
     <string name="image_desc_add_station">Add Station</string>
