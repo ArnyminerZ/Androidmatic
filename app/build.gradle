@@ -154,6 +154,9 @@ dependencies {
     // Kotlin reflect for generic classes
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
+    // KotlinX coroutines for Play Services
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4'
+
     // Dokka documentation dependencies
     dokkaHtmlPlugin "org.jetbrains.dokka:kotlin-as-java-plugin:$kotlin_version"
 
