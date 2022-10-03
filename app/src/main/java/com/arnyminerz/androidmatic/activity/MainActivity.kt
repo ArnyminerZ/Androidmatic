@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -38,6 +39,7 @@ import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.ui.NavigationBarItem
 import com.arnyminerz.androidmatic.storage.Keys
 import com.arnyminerz.androidmatic.storage.dataStore
+import com.arnyminerz.androidmatic.storage.get
 import com.arnyminerz.androidmatic.storage.getAsState
 import com.arnyminerz.androidmatic.storage.set
 import com.arnyminerz.androidmatic.ui.components.NavigationBar
@@ -49,7 +51,10 @@ import com.arnyminerz.androidmatic.ui.viewmodel.ERROR_NONE
 import com.arnyminerz.androidmatic.ui.viewmodel.ERROR_SERVER_SEARCH
 import com.arnyminerz.androidmatic.ui.viewmodel.ERROR_TIMEOUT
 import com.arnyminerz.androidmatic.ui.viewmodel.MainViewModel
+import com.arnyminerz.androidmatic.utils.doAsync
 import com.arnyminerz.androidmatic.utils.launch
+import com.arnyminerz.androidmatic.worker.UpdateDataOptions
+import com.arnyminerz.androidmatic.worker.UpdateDataWorker
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -59,6 +64,7 @@ import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
 class MainActivity : AppCompatActivity() {
@@ -198,6 +204,9 @@ class MainActivity : AppCompatActivity() {
         ) {
             val analyticsCollection by dataStore.getAsState(Keys.ANALYTICS_COLLECTION, true)
             val crashCollection by dataStore.getAsState(Keys.CRASH_COLLECTION, true)
+            val lastWorkerRun by dataStore.get(Keys.LAST_WORKER_RUN, -1).collectAsState(-1)
+            val serviceRunning by UpdateDataWorker.get(this@MainActivity)
+                .observeAsState(emptyList())
 
             SettingsCategory(text = stringResource(R.string.settings_category_advanced))
             SettingsItem(
@@ -219,6 +228,23 @@ class MainActivity : AppCompatActivity() {
                     dataStore[Keys.CRASH_COLLECTION] = checked
                     Firebase.crashlytics.setCrashlyticsCollectionEnabled(checked)
                 },
+            )
+            @Suppress("UNCHECKED_CAST")
+            SettingsItem(
+                title = stringResource(R.string.settings_service_title),
+                subtitle = if (serviceRunning.isEmpty())
+                    stringResource(R.string.settings_service_schedule)
+                else stringResource(
+                    R.string.settings_service_running,
+                    UpdateDataOptions.RepeatInterval,
+                    lastWorkerRun
+                        .takeIf { it >= 0 }
+                        ?.let { SimpleDateFormat.getDateTimeInstance().format(it) }
+                        ?: "N/A"
+                ),
+                onClick = {
+                    doAsync { UpdateDataWorker.scheduleIfNotRunning(this@MainActivity) }
+                }.takeIf { serviceRunning.isEmpty() } as (() -> Unit)?,
             )
         }
     }
