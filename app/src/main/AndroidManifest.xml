@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AndroidmaticTheme"
         android:enableOnBackInvokedCallback="true"
+        tools:ignore="UnusedAttribute"
         tools:targetApi="31">
         <activity
             android:name=".activity.MainActivity"
@@ -50,7 +51,7 @@
             android:name=".activity.WeatherWidgetConfigurationActivity"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
 
