@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.arnyminerz.androidmatic.BuildConfig
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
 import com.arnyminerz.androidmatic.data.ui.NavigationBarItem
@@ -74,6 +75,8 @@ import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
 import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPagerApi::class)
 class MainActivity : AppCompatActivity() {
@@ -234,53 +237,76 @@ class MainActivity : AppCompatActivity() {
     @Composable
     private fun SettingsLayout() {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxSize(),
         ) {
-            val analyticsCollection by dataStore.getAsState(Keys.ANALYTICS_COLLECTION, true)
-            val crashCollection by dataStore.getAsState(Keys.CRASH_COLLECTION, true)
-            val lastWorkerRun by dataStore.get(Keys.LAST_WORKER_RUN, -1).collectAsState(-1)
-            val serviceRunning by UpdateDataWorker.get(this@MainActivity)
-                .observeAsState(emptyList())
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                val analyticsCollection by dataStore.getAsState(Keys.ANALYTICS_COLLECTION, true)
+                val crashCollection by dataStore.getAsState(Keys.CRASH_COLLECTION, true)
+                val lastWorkerRun by dataStore.get(Keys.LAST_WORKER_RUN, -1).collectAsState(-1)
+                val serviceRunning by UpdateDataWorker.get(this@MainActivity)
+                    .observeAsState(emptyList())
 
-            SettingsCategory(text = stringResource(R.string.settings_category_advanced))
-            SettingsItem(
-                title = stringResource(R.string.settings_analytics_enabled_title),
-                subtitle = stringResource(R.string.settings_analytics_enabled_summary),
-                switch = true,
-                stateBoolean = analyticsCollection,
-                setBoolean = { checked ->
-                    dataStore[Keys.ANALYTICS_COLLECTION] = checked
-                    Firebase.analytics.setAnalyticsCollectionEnabled(checked)
-                },
-            )
-            SettingsItem(
-                title = stringResource(R.string.settings_error_enabled_title),
-                subtitle = stringResource(R.string.settings_error_enabled_summary),
-                switch = true,
-                stateBoolean = crashCollection,
-                setBoolean = { checked ->
-                    dataStore[Keys.CRASH_COLLECTION] = checked
-                    Firebase.crashlytics.setCrashlyticsCollectionEnabled(checked)
-                },
-            )
-            @Suppress("UNCHECKED_CAST")
-            SettingsItem(
-                title = stringResource(R.string.settings_service_title),
-                subtitle = if (serviceRunning.isEmpty())
-                    stringResource(R.string.settings_service_schedule)
-                else stringResource(
-                    R.string.settings_service_running,
-                    UpdateDataOptions.RepeatInterval,
-                    lastWorkerRun
+                SettingsCategory(text = stringResource(R.string.settings_category_advanced))
+                SettingsItem(
+                    title = stringResource(R.string.settings_analytics_enabled_title),
+                    subtitle = stringResource(R.string.settings_analytics_enabled_summary),
+                    switch = true,
+                    stateBoolean = analyticsCollection,
+                    setBoolean = { checked ->
+                        dataStore[Keys.ANALYTICS_COLLECTION] = checked
+                        Firebase.analytics.setAnalyticsCollectionEnabled(checked)
+                    },
+                )
+                SettingsItem(
+                    title = stringResource(R.string.settings_error_enabled_title),
+                    subtitle = stringResource(R.string.settings_error_enabled_summary),
+                    switch = true,
+                    stateBoolean = crashCollection,
+                    setBoolean = { checked ->
+                        dataStore[Keys.CRASH_COLLECTION] = checked
+                        Firebase.crashlytics.setCrashlyticsCollectionEnabled(checked)
+                    },
+                )
+                @Suppress("UNCHECKED_CAST")
+                SettingsItem(
+                    title = stringResource(R.string.settings_service_title),
+                    subtitle = if (serviceRunning.isEmpty())
+                        stringResource(R.string.settings_service_schedule)
+                    else lastWorkerRun
                         .takeIf { it >= 0 }
-                        ?.let { SimpleDateFormat.getDateTimeInstance().format(it) }
-                        ?: "N/A"
+                        ?.let { Date(it) }
+                        ?.let { SimpleDateFormat("HH:mm", Locale.getDefault()).format(it) }
+                        ?.let { lastRunTime ->
+                            stringResource(
+                                R.string.settings_service_running,
+                                UpdateDataOptions.RepeatInterval,
+                                lastRunTime
+                            )
+                        }
+                        ?: stringResource(
+                            R.string.settings_service_running_never,
+                            UpdateDataOptions.RepeatInterval,
+                        ),
+                    onClick = {
+                        doAsync { UpdateDataWorker.scheduleIfNotRunning(this@MainActivity) }
+                    }.takeIf { serviceRunning.isEmpty() } as (() -> Unit)?,
+                )
+            }
+            Text(
+                stringResource(
+                    R.string.settings_info,
+                    BuildConfig.VERSION_NAME,
+                    BuildConfig.VERSION_CODE
                 ),
-                onClick = {
-                    doAsync { UpdateDataWorker.scheduleIfNotRunning(this@MainActivity) }
-                }.takeIf { serviceRunning.isEmpty() } as (() -> Unit)?,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp, horizontal = 8.dp),
+                style = MaterialTheme.typography.labelMedium,
             )
         }
     }
