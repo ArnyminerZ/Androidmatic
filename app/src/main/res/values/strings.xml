@@ -15,6 +15,8 @@
     <string name="dialog_action_delete">Delete</string>
     <string name="dialog_action_share">Share</string>
 
+    <string name="dialog_language_title">Language Selection</string>
+
     <string name="image_desc_close">Close</string>
     <string name="image_desc_add_station">Add Station</string>
     <string name="image_desc_refresh">Refresh</string>
@@ -27,6 +29,8 @@
     <string name="image_desc_pressure">Pressure</string>
     <string name="image_desc_wind">Wind</string>
     <string name="image_desc_rain">Rain</string>
+    <string name="image_desc_language_selected">Language selected</string>
+    <string name="image_desc_language_not_selected">Language not selected</string>
 
     <string name="menu_item_home">Home</string>
     <string name="menu_item_settings">Settings</string>
@@ -66,6 +70,8 @@
     <string name="state_loading">Loading…</string>
 
     <string name="settings_category_advanced">Advanced</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_language_summary">Select your favorite language to display in the UI.</string>
     <string name="settings_analytics_enabled_title">Send Usage and Performance data</string>
     <string name="settings_analytics_enabled_summary">If enabled, the app will send the developer information about the performance of the app, and how it\'s used, to improve its functionality.</string>
     <string name="settings_error_enabled_title">Send Error and Crash logs</string>

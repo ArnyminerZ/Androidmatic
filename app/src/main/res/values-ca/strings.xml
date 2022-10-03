@@ -81,4 +81,9 @@
     <string name="toast_link_invalid">L\'enllaç no és vàlid.</string>
     <string name="link_station_description">Obre aquest enllaç amb Androidmatic per a afegir la nova estació automàticament.</string>
     <string name="filter_add_station">Afegir estació</string>
+    <string name="dialog_language_title">Selector d\'idioma</string>
+    <string name="image_desc_language_selected">Idioma seleccionat</string>
+    <string name="image_desc_language_not_selected">Idioma no seleccionat</string>
+    <string name="settings_language_title">Idioma</string>
+    <string name="settings_language_summary">Selecciona el teu idioma preferit per a mostrar en l\'interfície</string>
 </resources>
