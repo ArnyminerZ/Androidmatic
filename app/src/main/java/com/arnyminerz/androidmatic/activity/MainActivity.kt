@@ -170,6 +170,7 @@ class MainActivity : AppCompatActivity() {
                 },
                 bottomBar = {
                     NavigationBar(
+                        pagerState.currentPage,
                         listOf(
                             NavigationBarItem(Icons.Rounded.Home, R.string.menu_item_home),
                             NavigationBarItem(Icons.Rounded.Settings, R.string.menu_item_settings),
@@ -178,7 +179,7 @@ class MainActivity : AppCompatActivity() {
                             scope.launch {
                                 pagerState.animateScrollToPage(page)
                             }
-                        }
+                        },
                     )
                 },
             ) { paddingValues ->
