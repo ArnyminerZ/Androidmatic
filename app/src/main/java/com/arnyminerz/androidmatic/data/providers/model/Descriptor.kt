@@ -86,7 +86,7 @@ abstract class Descriptor {
 
     enum class Capability(
         // TODO: Check that all parameters are given somewhere
-        val requireParameters: Map<String, KClass<*>>
+        val requireParameters: Map<String, KClass<*>> = emptyMap(),
     ) {
         /**
          * Indicates that the provider supports listing for available stations. Because of this, the
@@ -94,7 +94,7 @@ abstract class Descriptor {
          * @author Arnau Mora
          * @since 20220926
          */
-        LISTING(emptyMap()),
+        LISTING,
 
         /**
          * Indicates that the provider has information about the location of the station. This
@@ -103,5 +103,13 @@ abstract class Descriptor {
          * @since 20220926
          */
         LOCATION(mapOf("location" to String::class, "point" to GeoPoint::class)),
+
+        /**
+         * Indicates that the provider has to be configured manually. Because of this, the provider
+         * must extend [WeatherManualProvider].
+         * @author Arnau Mora
+         * @since 20221003
+         */
+        MANUAL_SETUP,
     }
 }
