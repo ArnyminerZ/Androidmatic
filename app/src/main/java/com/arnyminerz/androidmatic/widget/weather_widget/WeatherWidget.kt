@@ -37,12 +37,12 @@ import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.arnyminerz.androidmatic.R
-import com.arnyminerz.androidmatic.utils.shortTime
 import com.arnyminerz.androidmatic.widget.GlanceTheme
 import com.arnyminerz.androidmatic.widget.TintImage
 import org.json.JSONObject
 import timber.log.Timber
-import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class WeatherWidget : GlanceAppWidget() {
     companion object {
@@ -153,9 +153,8 @@ class WeatherWidget : GlanceAppWidget() {
                         .defaultWeight(),
                 )
 
-                val diff = Date().time - weather.timestamp.time
                 Text(
-                    diff.shortTime(context),
+                    SimpleDateFormat("HH:mm", Locale.getDefault()).format(weather.timestamp),
                     modifier = GlanceModifier
                         .padding(start = 4.dp, bottom = 4.dp),
                     style = TextStyle(
