@@ -13,6 +13,7 @@
 
     <string name="dialog_action_close">Close</string>
     <string name="dialog_action_delete">Delete</string>
+    <string name="dialog_action_share">Share</string>
 
     <string name="image_desc_close">Close</string>
     <string name="image_desc_add_station">Add Station</string>
@@ -104,4 +105,10 @@
     <string name="toast_provider_ok">The url is valid</string>
     <string name="toast_provider_fail">The url is not valid</string>
     <string name="toast_provider_data_invalid">The URL is valid, but it\'s returning invalid data.</string>
+    <string name="toast_short_link">Could not generate short link.</string>
+    <string name="toast_link_invalid">Link is not valid.</string>
+
+    <string name="link_station_description">Load this link with Androidmatic to add a new station automatically.</string>
+
+    <string name="filter_add_station">Add Station</string>
 </resources>

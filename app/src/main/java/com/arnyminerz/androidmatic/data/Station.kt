@@ -1,9 +1,11 @@
 package com.arnyminerz.androidmatic.data
 
 import android.content.Context
+import android.net.Uri
 import android.nfc.FormatException
 import androidx.annotation.WorkerThread
 import com.android.volley.VolleyError
+import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.model.JsonSerializable
 import com.arnyminerz.androidmatic.data.model.putSerializable
 import com.arnyminerz.androidmatic.data.numeric.GeoPoint
@@ -12,12 +14,20 @@ import com.arnyminerz.androidmatic.data.providers.model.Descriptor
 import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
 import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.utils.readString
+import com.arnyminerz.androidmatic.utils.share
 import com.arnyminerz.androidmatic.utils.skip
+import com.arnyminerz.androidmatic.utils.toast
 import com.arnyminerz.androidmatic.utils.xmlPubDateFormatter
+import com.google.firebase.dynamiclinks.ktx.androidParameters
+import com.google.firebase.dynamiclinks.ktx.dynamicLinks
+import com.google.firebase.dynamiclinks.ktx.shortLinkAsync
+import com.google.firebase.dynamiclinks.ktx.socialMetaTagParameters
+import com.google.firebase.ktx.Firebase
 import org.json.JSONException
 import org.json.JSONObject
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
+import timber.log.Timber
 import java.io.IOException
 import java.util.Date
 import kotlin.reflect.KClass
@@ -96,6 +106,38 @@ data class Station(
             Station(
                 HoldingDescriptor.fromJson(json.getJSONObject("descriptor")),
             )
+
+        /**
+         * Shares the given station as a Dynamic link.
+         * @author Arnau Mora
+         * @since 20221003
+         * @param context The context that is requesting the share.
+         * @param stationName The display name of the station to share.
+         * @param descriptor The descriptor of the station in JSON format.
+         * @return A Task for running extra actions after sharing.
+         * @see Descriptor
+         */
+        fun share(context: Context, stationName: String, descriptor: String) =
+            Firebase.dynamicLinks
+                .shortLinkAsync {
+                    link =
+                        Uri.parse("https://androidmatic.arnyminerz.com/add_station?descriptor=$descriptor")
+                    domainUriPrefix = "https://androidmatic.page.link"
+                    androidParameters {
+                        minimumVersion = 6
+                    }
+                    socialMetaTagParameters {
+                        title = stationName
+                        description = context.getString(R.string.link_station_description)
+                    }
+                }
+                .addOnSuccessListener { link ->
+                    context.share(link.shortLink.toString())
+                }
+                .addOnFailureListener {
+                    Timber.e(it, "Could not create short link.")
+                    context.toast(R.string.toast_short_link)
+                }
     }
 
     val name: String = descriptor.getValue("name")

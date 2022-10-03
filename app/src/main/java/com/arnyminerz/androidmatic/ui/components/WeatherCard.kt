@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Thermostat
@@ -44,6 +45,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.annotation.WeatherLiteral
+import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.WeatherState
 import com.arnyminerz.androidmatic.data.numeric.MaxValue
 import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
@@ -54,7 +56,11 @@ import java.util.Date
 
 @Composable
 @ExperimentalMaterial3Api
-fun WeatherCard(weather: WeatherState?, onDeleteRequested: (() -> Job)?) {
+fun WeatherCard(
+    weather: WeatherState?,
+    stationDescriptor: String?,
+    onDeleteRequested: (() -> Job)?
+) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var showDialog by remember { mutableStateOf(false) }
@@ -69,7 +75,8 @@ fun WeatherCard(weather: WeatherState?, onDeleteRequested: (() -> Job)?) {
             },
             title = { Text(text = weather.stationName) },
             text = {
-                var enabled by remember { mutableStateOf(true) }
+                var deleteEnabled by remember { mutableStateOf(true) }
+                var shareEnabled by remember { mutableStateOf(true) }
                 Column(
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -84,13 +91,32 @@ fun WeatherCard(weather: WeatherState?, onDeleteRequested: (() -> Job)?) {
                                 )
                             },
                             modifier = Modifier
-                                .clickable(enabled = enabled, onClick = {
-                                    enabled = true
+                                .clickable(enabled = deleteEnabled) {
+                                    deleteEnabled = false
                                     onDeleteRequested().invokeOnCompletion {
-                                        enabled = true
+                                        deleteEnabled = true
                                         showDialog = false
                                     }
-                                }),
+                                },
+                        )
+                    if (stationDescriptor != null)
+                        ListItem(
+                            headlineText = { Text(text = stringResource(R.string.dialog_action_share)) },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Outlined.Share,
+                                    stringResource(R.string.dialog_action_share),
+                                )
+                            },
+                            modifier = Modifier
+                                .clickable(enabled = shareEnabled) {
+                                    shareEnabled = false
+                                    Station
+                                        .share(context, weather.stationName, stationDescriptor)
+                                        .addOnCompleteListener {
+                                            shareEnabled = true
+                                        }
+                                },
                         )
                 }
             },
@@ -246,6 +272,7 @@ fun WeatherCardPreview(
             0.0,
             literalState,
         ),
+        null,
         null,
     )
 }
