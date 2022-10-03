@@ -1,14 +1,40 @@
 package com.arnyminerz.androidmatic.data.providers
 
 import android.content.Context
+import android.widget.Toast
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.StationFeedResult
 import com.arnyminerz.androidmatic.data.WeatherState
 import com.arnyminerz.androidmatic.data.numeric.MaxValue
 import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
 import com.arnyminerz.androidmatic.data.providers.model.Descriptor
-import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
+import com.arnyminerz.androidmatic.data.providers.model.WeatherManualProvider
 import com.arnyminerz.androidmatic.singleton.VolleySingleton
+import com.arnyminerz.androidmatic.utils.doAsync
+import com.arnyminerz.androidmatic.utils.toast
+import com.arnyminerz.androidmatic.utils.ui
+import timber.log.Timber
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -22,7 +48,7 @@ import kotlin.reflect.KClass
  */
 private val DateFormatter = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US)
 
-class WeewxTemplateProvider : WeatherProvider() {
+class WeewxTemplateProvider : WeatherManualProvider() {
     override val displayName: String = "Weewx (Meteoclimatic template)"
 
     override val providerName: String = "weewx"
@@ -39,7 +65,7 @@ class WeewxTemplateProvider : WeatherProvider() {
             "guid" to String::class,
         )
 
-        override val capabilities: List<Capability> = emptyList()
+        override val capabilities: List<Capability> = listOf(Capability.MANUAL_SETUP)
 
         fun provide(url: String, name: String, uid: String, guid: String) =
             provide("url" to url, "name" to name, "uid" to uid, "guid" to guid)
@@ -166,5 +192,117 @@ class WeewxTemplateProvider : WeatherProvider() {
             "unknown", // Weewx doesn't support literal state
         )
         return station to weather
+    }
+
+    @Composable
+    @OptIn(ExperimentalMaterial3Api::class)
+    override fun Contents(onSubmit: (station: Station) -> Unit) {
+        val context = LocalContext.current
+
+        var enabled by remember { mutableStateOf(true) }
+        var templateUrl by remember { mutableStateOf("") }
+        var stationName by remember { mutableStateOf("") }
+
+        OutlinedTextField(
+            value = templateUrl,
+            enabled = enabled,
+            onValueChange = { templateUrl = it },
+            label = { Text(stringResource(R.string.manual_template_url)) },
+            keyboardOptions = KeyboardOptions(
+                autoCorrect = false,
+                keyboardType = KeyboardType.Uri,
+                imeAction = ImeAction.Done,
+            ),
+            maxLines = 1,
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth(),
+        )
+
+        OutlinedTextField(
+            value = stationName,
+            enabled = enabled,
+            onValueChange = { stationName = it },
+            label = { Text(stringResource(R.string.manual_template_name)) },
+            keyboardOptions = KeyboardOptions(
+                autoCorrect = true,
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Done,
+            ),
+            maxLines = 1,
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth(),
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+        ) {
+            OutlinedButton(
+                enabled = enabled,
+                onClick = {
+                    enabled = false
+                    doAsync {
+                        val valid = firstWithDescriptor(ProviderDescriptor.name)
+                            ?.check(context, "name" to stationName, "url" to templateUrl)
+                            ?: false
+                        ui {
+                            context.toast(
+                                if (valid)
+                                    context.getString(R.string.toast_provider_ok)
+                                else
+                                    context.getString(R.string.toast_provider_fail)
+                            )
+                            enabled = true
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 4.dp),
+            ) { Text(stringResource(R.string.action_check)) }
+            Button(
+                enabled = enabled,
+                onClick = {
+                    enabled = false
+                    doAsync {
+                        try {
+                            val station = firstWithDescriptor(ProviderDescriptor.name)
+                                ?.fetch(
+                                    context,
+                                    "name" to stationName,
+                                    "url" to templateUrl
+                                )
+                                ?.takeIf { it.stations.isNotEmpty() }
+                                ?.also { Timber.i("Station is fine!") }
+                                ?.stations
+                                ?.get(0)
+                                ?: return@doAsync ui { context.toast(context.getString(R.string.toast_provider_fail)) }
+                            onSubmit(station)
+                        } catch (e: NullPointerException) {
+                            Timber.e(
+                                e,
+                                "Could not load station data, since some data is incomplete."
+                            )
+                        } catch (e: ParseException) {
+                            Timber.e(e, "There's a parameter missing in data.")
+                            ui {
+                                context.toast(
+                                    context.getString(R.string.toast_provider_data_invalid),
+                                    Toast.LENGTH_LONG,
+                                )
+                            }
+                        } catch (e: Exception) {
+                            // TODO: Handle exceptions
+                            Timber.e(e, "Could not load provider.")
+                        }
+                    }.invokeOnCompletion { enabled = true }
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 4.dp),
+            ) { Text(stringResource(R.string.action_add)) }
+        }
     }
 }
