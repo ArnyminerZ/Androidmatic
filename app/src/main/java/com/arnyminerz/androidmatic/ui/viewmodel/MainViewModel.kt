@@ -161,6 +161,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         else launch { }
 
     /**
+     * Enables a given station.
+     * @author Arnau Mora
+     * @since 20220926
+     * @param station The station to enable.
+     * @return A job that supervises the progress of the addition.
+     */
+    fun enableStation(station: SelectedStationEntity) = launch {
+        databaseSingleton
+            .stationsDao()
+            .enableStation(station)
+    }
+
+    /**
      * Disables a given station.
      * @author Arnau Mora
      * @since 20220926
