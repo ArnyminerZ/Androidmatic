@@ -171,7 +171,7 @@ class MainActivity : AppCompatActivity() {
             modifier = Modifier
                 .fillMaxSize(),
         ) {
-            if (enabledStations?.isEmpty() == true)
+            if (enabledStations?.isNotEmpty() != true)
                 launch(AddStationActivity::class)
             else {
                 val weatherMap = viewModel.weather
