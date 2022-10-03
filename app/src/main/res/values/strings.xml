@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Androidmatic</string>
 
-    <string name="title_main">@string/app_name</string>
+    <string name="title_main" translatable="false">@string/app_name</string>
     <string name="title_add_station">Select Stations</string>
     <string name="title_choose_station">Select Station</string>
     <string name="title_manual_setup">Manual Setup</string>
@@ -80,8 +80,8 @@
     <string name="widget_loading">Loading…</string>
     <string name="widget_weather_image_content_description">The descriptive icon for the current weather.</string>
     <string name="widget_weather_preview_name">Antarctica</string>
-    <string name="widget_weather_preview_temp">24ºC</string>
-    <string name="widget_weather_preview_rain">2 mm</string>
+    <string name="widget_weather_preview_temp" translatable="false">24ºC</string>
+    <string name="widget_weather_preview_rain" translatable="false">2 mm</string>
 
     <string name="wind_direction_north">N</string>
     <string name="wind_direction_north_east">NE</string>
