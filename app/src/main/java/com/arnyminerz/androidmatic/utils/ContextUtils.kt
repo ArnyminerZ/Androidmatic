@@ -1,10 +1,12 @@
 package com.arnyminerz.androidmatic.utils
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.util.TypedValue
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
@@ -19,8 +21,27 @@ import kotlin.reflect.KClass
  * @param kClass The class of the Activity to launch.
  * @param options Used for applying options to the Intent being launched.
  */
+@UiThread
 fun <A : Activity> Context.launch(kClass: KClass<A>, options: Intent.() -> Unit = {}) =
     startActivity(Intent(this, kClass.java).apply(options))
+
+/**
+ * Launches the selected activity for the given context.
+ * @author Arnau Mora
+ * @since 20221003
+ * @param context The context that is requesting the launch.
+ * @param kClass The class of the Activity.
+ * @param options USed for applying options to the Intent being launched.
+ * @throws ActivityNotFoundException If the given [kClass] is not a valid and registered activity
+ * class.
+ */
+@UiThread
+@Throws(ActivityNotFoundException::class)
+fun <A : Activity> ActivityResultLauncher<Intent>.launch(
+    context: Context,
+    kClass: KClass<A>,
+    options: Intent.() -> Unit = {},
+) = launch(Intent(context, kClass.java).apply(options))
 
 /**
  * Gets the value of an attribute resource as a Color.
