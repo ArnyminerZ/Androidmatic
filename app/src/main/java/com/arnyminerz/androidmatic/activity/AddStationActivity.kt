@@ -3,7 +3,6 @@ package com.arnyminerz.androidmatic.activity
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -20,7 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Build
 import androidx.compose.material.icons.rounded.Check
@@ -43,7 +42,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -59,18 +57,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.volley.TimeoutError
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.Station
-import com.arnyminerz.androidmatic.data.providers.WeewxTemplateProvider
 import com.arnyminerz.androidmatic.data.providers.model.Descriptor
 import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
+import com.arnyminerz.androidmatic.data.providers.model.WeatherManualProvider
 import com.arnyminerz.androidmatic.data.providers.model.WeatherProvider
 import com.arnyminerz.androidmatic.storage.database.entity.SelectedStationEntity
 import com.arnyminerz.androidmatic.ui.components.SortingChip
@@ -78,12 +73,9 @@ import com.arnyminerz.androidmatic.ui.components.StationCard
 import com.arnyminerz.androidmatic.ui.components.ToggleableChip
 import com.arnyminerz.androidmatic.ui.theme.setThemedContent
 import com.arnyminerz.androidmatic.ui.viewmodel.StationManagerViewModel
-import com.arnyminerz.androidmatic.utils.doAsync
 import com.arnyminerz.androidmatic.utils.filterSearch
 import com.arnyminerz.androidmatic.utils.json
-import com.arnyminerz.androidmatic.utils.toast
 import com.arnyminerz.androidmatic.utils.toggle
-import com.arnyminerz.androidmatic.utils.ui
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
@@ -92,7 +84,6 @@ import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.text.ParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 open class AddStationActivity(
@@ -634,12 +625,15 @@ open class AddStationActivity(
                 .padding(8.dp)
                 .fillMaxSize(),
         ) {
+            val providers: List<WeatherManualProvider> =
+                WeatherProvider.getWithCapabilities(Descriptor.Capability.MANUAL_SETUP)
+                    .map { it as WeatherManualProvider }
             var providerExpanded by remember { mutableStateOf(false) }
-            var provider by remember { mutableStateOf("") }
+            var selectedProvider by remember { mutableStateOf(providers[0]) }
 
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
-                    value = provider,
+                    value = selectedProvider.displayName,
                     onValueChange = {},
                     enabled = false,
                     modifier = Modifier
@@ -655,134 +649,26 @@ open class AddStationActivity(
                     expanded = providerExpanded,
                     onDismissRequest = { providerExpanded = false },
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("WeeWX") },
-                        onClick = { provider = "WeeWX"; providerExpanded = false },
-                    )
+                    for (provider in providers)
+                        DropdownMenuItem(
+                            text = { Text(provider.displayName) },
+                            onClick = { selectedProvider = provider; providerExpanded = false },
+                        )
                 }
             }
 
-            AnimatedVisibility(visible = provider == "WeeWX") { ManualSetupWeeWX() }
-        }
-    }
-
-    @Composable
-    private fun ManualSetupWeeWX() {
-        val context = LocalContext.current
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-        ) {
-            var enabled by remember { mutableStateOf(true) }
-            var templateUrl by remember { mutableStateOf("") }
-            var stationName by remember { mutableStateOf("") }
-
-            OutlinedTextField(
-                value = templateUrl,
-                enabled = enabled,
-                onValueChange = { templateUrl = it },
-                label = { Text(stringResource(R.string.manual_template_url)) },
-                keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Done,
-                ),
-                maxLines = 1,
-                singleLine = true,
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(),
-            )
-
-            OutlinedTextField(
-                value = stationName,
-                enabled = enabled,
-                onValueChange = { stationName = it },
-                label = { Text(stringResource(R.string.manual_template_name)) },
-                keyboardOptions = KeyboardOptions(
-                    autoCorrect = true,
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done,
-                ),
-                maxLines = 1,
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth(),
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
             ) {
-                OutlinedButton(
-                    enabled = enabled,
-                    onClick = {
-                        enabled = false
-                        doAsync {
-                            val valid = WeatherProvider
-                                .firstWithDescriptor(WeewxTemplateProvider.ProviderDescriptor.name)
-                                ?.check(context, "name" to stationName, "url" to templateUrl)
-                                ?: false
-                            ui {
-                                toast(
-                                    if (valid)
-                                        getString(R.string.toast_provider_ok)
-                                    else
-                                        getString(R.string.toast_provider_fail)
-                                )
-                                enabled = true
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp),
-                ) { Text(stringResource(R.string.action_check)) }
-                Button(
-                    enabled = enabled,
-                    onClick = {
-                        enabled = false
-                        doAsync {
-                            try {
-                                val station = WeatherProvider
-                                    .firstWithDescriptor(WeewxTemplateProvider.ProviderDescriptor.name)
-                                    ?.fetch(
-                                        context,
-                                        "name" to stationName,
-                                        "url" to templateUrl
-                                    )
-                                    ?.takeIf { it.stations.isNotEmpty() }
-                                    ?.also { Timber.i("Station is fine!") }
-                                    ?.stations
-                                    ?.get(0)
-                                    ?: return@doAsync ui { toast(getString(R.string.toast_provider_fail)) }
-                                onSelectStation?.invoke(station)
-                                    ?: station
-                                        .let { viewModel.enableStation(it) }
-                                        .also { onBack(0, true) {} }
-                            } catch (e: NullPointerException) {
-                                Timber.e(
-                                    e,
-                                    "Could not load station data, since some data is incomplete."
-                                )
-                            } catch (e: ParseException) {
-                                Timber.e(e, "There's a parameter missing in data.")
-                                ui {
-                                    toast(
-                                        getString(R.string.toast_provider_data_invalid),
-                                        Toast.LENGTH_LONG
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                // TODO: Handle exceptions
-                                Timber.e(e, "Could not load provider.")
-                            }
-                        }.invokeOnCompletion { enabled = true }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 4.dp),
-                ) { Text(stringResource(R.string.action_add)) }
+                selectedProvider.Contents { station ->
+                    onSelectStation?.invoke(station)
+                        ?: station
+                            .let { viewModel.enableStation(it) }
+                            .also { onBack(0, true) {} }
+                }
             }
         }
     }
