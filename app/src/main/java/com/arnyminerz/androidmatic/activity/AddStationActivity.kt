@@ -385,39 +385,40 @@ open class AddStationActivity(
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             )
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                var providersExpanded by remember { mutableStateOf(false) }
-                OutlinedTextField(
-                    value = availableListProviders[selectedProvider].displayName,
-                    onValueChange = {},
-                    enabled = false,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                        .clickable { providersExpanded = true },
-                    label = { Text(stringResource(R.string.label_provider)) },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurface,
-                    ),
-                )
-                DropdownMenu(
-                    expanded = providersExpanded,
-                    onDismissRequest = { providersExpanded = false },
+            if (availableListProviders.size > 1)
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    availableListProviders.forEachIndexed { index, provider ->
-                        DropdownMenuItem(
-                            text = { Text(provider.displayName) },
-                            onClick = {
-                                selectedProvider = index
-                                providersExpanded = false
-                            },
-                        )
+                    var providersExpanded by remember { mutableStateOf(false) }
+                    OutlinedTextField(
+                        value = availableListProviders[selectedProvider].displayName,
+                        onValueChange = {},
+                        enabled = false,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .clickable { providersExpanded = true },
+                        label = { Text(stringResource(R.string.label_provider)) },
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurface,
+                        ),
+                    )
+                    DropdownMenu(
+                        expanded = providersExpanded,
+                        onDismissRequest = { providersExpanded = false },
+                    ) {
+                        availableListProviders.forEachIndexed { index, provider ->
+                            DropdownMenuItem(
+                                text = { Text(provider.displayName) },
+                                onClick = {
+                                    selectedProvider = index
+                                    providersExpanded = false
+                                },
+                            )
+                        }
                     }
                 }
-            }
 
             if (providerDescriptor.supports(Descriptor.Capability.LOCATION)) {
                 Row(
