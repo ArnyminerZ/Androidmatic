@@ -3,6 +3,7 @@ package com.arnyminerz.androidmatic.utils
 import android.content.Context
 import com.arnyminerz.androidmatic.R
 import org.json.JSONObject
+import java.util.Locale
 
 /**
  * Converts a number of milliseconds into a [String] representing the time.
@@ -37,3 +38,16 @@ fun Long.shortTime(context: Context): String {
  */
 val String.json: JSONObject
     get() = JSONObject(this)
+
+/**
+ * Replaces the first letter of the String with its capitalized version.
+ * @author Arnau Mora
+ * @since 20221003
+ */
+val String.capitalized: String
+    get() = this.replaceFirstChar {
+        if (it.isLowerCase())
+            it.titlecase(Locale.getDefault())
+        else
+            it.toString()
+    }
