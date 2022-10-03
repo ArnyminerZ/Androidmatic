@@ -11,6 +11,7 @@ import timber.log.Timber
 import java.io.InvalidClassException
 import java.text.ParseException
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 abstract class WeatherProvider {
     /**
@@ -104,10 +105,36 @@ abstract class WeatherProvider {
                     ?.let { throw IllegalArgumentException("Provider named ${it.providerName} already registered.") }
             }
             ?.also {
+                // Ensure required parameters
                 if (!it.descriptor.hasParameter("name"))
                     throw IllegalArgumentException("The provider's descriptor doesn't have a \"name\" field.")
                 if (!it.descriptor.hasParameter("uid"))
                     throw IllegalArgumentException("The provider's descriptor doesn't have a \"uid\" field.")
+            }
+            ?.also { provider ->
+                // Ensure extending types
+                val desc = provider.descriptor
+                desc.capabilities
+                    .filter { it.requireExtends != null }
+                    .forEach { capability ->
+                        val extends = capability.requireExtends!!
+                        if (!providerClass.isSubclassOf(extends))
+                            throw IllegalArgumentException("The provider has ${capability.name}, but doesn't extend ${extends.simpleName}.")
+                    }
+            }
+            ?.also { provider ->
+                // Ensure Capability required parameters
+                provider
+                    .descriptor
+                    .capabilities
+                    .filter { it.requireParameters.isNotEmpty() }
+                    .forEach { capability ->
+                        val requireParameters = capability.requireParameters
+                        requireParameters.entries.forEach { (key, type) ->
+                            if (!provider.descriptor.hasParameterOfType(key, type))
+                                throw IllegalArgumentException("The provider has ${capability.name}, but doesn't have the following parameters: ${requireParameters.paramsString()}")
+                        }
+                    }
             }
             ?.also {
                 providers = providers
