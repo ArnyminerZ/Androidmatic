@@ -158,7 +158,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     ui { loadingTasks.remove(station.id) }
                 }
             }
-        else launch { }
+        else launch { loadingTasks.remove(station.id) }
 
     /**
      * Enables a given station.
