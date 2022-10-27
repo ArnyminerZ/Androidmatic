@@ -66,6 +66,7 @@ import com.arnyminerz.androidmatic.ui.viewmodel.ERROR_NONE
 import com.arnyminerz.androidmatic.ui.viewmodel.ERROR_SERVER_SEARCH
 import com.arnyminerz.androidmatic.ui.viewmodel.ERROR_TIMEOUT
 import com.arnyminerz.androidmatic.ui.viewmodel.MainViewModel
+import com.arnyminerz.androidmatic.utils.areGooglePlayServicesAvailable
 import com.arnyminerz.androidmatic.utils.capitalized
 import com.arnyminerz.androidmatic.utils.doAsync
 import com.arnyminerz.androidmatic.utils.launch
@@ -97,6 +98,8 @@ import kotlin.coroutines.suspendCoroutine
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
 
+    private var playServicesAvailable: Boolean = false
+
     /**
      * Used for launching [AddStationActivity] for selecting new stations.
      * @author Arnau Mora
@@ -120,6 +123,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        playServicesAvailable = areGooglePlayServicesAvailable()
 
         doAsync {
             try {
@@ -282,7 +287,11 @@ class MainActivity : AppCompatActivity() {
                         viewModel.loadWeather(selectedStation)
 
                         weatherMap[selectedStation.id]?.let {
-                            WeatherCard(it, selectedStation.customDescriptor) {
+                            WeatherCard(
+                                it,
+                                selectedStation.customDescriptor,
+                                playServicesAvailable
+                            ) {
                                 return@WeatherCard viewModel.disableStation(
                                     selectedStation
                                 )
