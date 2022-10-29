@@ -199,7 +199,7 @@ data class Station(
     )
     @WorkerThread
     suspend fun fetchWeather(context: Context): WeatherState =
-        provider.fetchWeather(context, *descriptor.expand())
+        provider.fetchWeather(context, descriptor.expand())
 
     override fun toJson(): JSONObject = JSONObject().apply {
         putSerializable("descriptor", descriptor)

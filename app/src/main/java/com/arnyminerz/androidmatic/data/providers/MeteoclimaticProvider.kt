@@ -11,6 +11,7 @@ import com.arnyminerz.androidmatic.data.numeric.MaxValue
 import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
 import com.arnyminerz.androidmatic.data.providers.model.Descriptor
 import com.arnyminerz.androidmatic.data.providers.model.WeatherListProvider
+import com.arnyminerz.androidmatic.exceptions.MissingParameterException
 import com.arnyminerz.androidmatic.singleton.VolleySingleton
 import com.arnyminerz.androidmatic.utils.skip
 import org.xmlpull.v1.XmlPullParser
@@ -64,14 +65,14 @@ class MeteoclimaticProvider : WeatherListProvider() {
     }
 
     override suspend fun list(context: Context): List<Station> =
-        fetch(context, "uid" to "ES").stations
+        fetch(context, mapOf("uid" to "ES")).stations
 
     override suspend fun fetch(
         context: Context,
-        vararg params: Pair<String, Any>,
+        params: Map<String, Any>,
     ): StationFeedResult {
         Timber.d("Getting station ($this) data from Meteoclimatic...")
-        val uid = params.find { it.first == "uid" }?.second
+        val uid = params["uid"]
             ?: throw IllegalArgumentException("params doesn't have any \"uid\".")
         Timber.v("Found uid in parameters: $uid")
         val url = "https://www.meteoclimatic.net/feed/rss/$uid"
@@ -105,16 +106,33 @@ class MeteoclimaticProvider : WeatherListProvider() {
         return readFeed(parser)
     }
 
+    /**
+     * Fetches the feather state for the given station.
+     * @author Arnau Mora
+     * @since 20221029
+     * @param context The context that is requesting the data.
+     * @param params Extra parameters for describing the data load. Requires:
+     * * `uid`: The uid of the station.
+     * * `description`: The description of the station, contains the weather data.
+     * @throws MissingParameterException When the given [params] doesn't contain a required parameter.
+     * @throws ArrayIndexOutOfBoundsException When the fetch result has not given any stations.
+     * @throws IllegalStateException When the loaded description misses some data.
+     */
+    @Throws(
+        MissingParameterException::class,
+        ArrayIndexOutOfBoundsException::class,
+        IllegalStateException::class,
+    )
     override suspend fun fetchWeather(
         context: Context,
-        vararg params: Pair<String, Any>
+        params: Map<String, Any>
     ): WeatherState {
-        val uid = (params.find { it.first == "uid" }?.second as? String)
-            ?: throw IllegalArgumentException("params doesn't have any \"uid\".")
-        val descriptionRaw = (params.find { it.first == "description" }?.second as? String)
-            ?: throw IllegalArgumentException("params doesn't have any \"description\".")
+        val uid = params["uid"]
+            ?: throw MissingParameterException("params doesn't have any \"uid\".")
+        val descriptionRaw = params["description"] as? String
+            ?: throw MissingParameterException("params doesn't have any \"description\".")
 
-        val feedResult = fetch(context, *params)
+        val feedResult = fetch(context, params)
         val station = feedResult.stations
             // There should only be one station. Handle null just in case it wasn't found
             .firstOrNull()
@@ -125,7 +143,7 @@ class MeteoclimaticProvider : WeatherListProvider() {
             .filter { it.isNotBlank() }
         val dataRaw = description
             .find { it.startsWith("[[<$uid", true) }
-            ?: throw IllegalArgumentException("Could not find weather data (<$uid) in description. Description: $description")
+            ?: error("Could not find weather data (<$uid) in description. Description: $description")
         val dataBlocks = dataRaw
             .substring(dataRaw.indexOf(';') + 1, dataRaw.lastIndexOf(">]]"))
             // Remove all parenthesis

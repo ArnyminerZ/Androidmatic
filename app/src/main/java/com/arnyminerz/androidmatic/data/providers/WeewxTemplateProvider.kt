@@ -30,6 +30,7 @@ import com.arnyminerz.androidmatic.data.numeric.MaxValue
 import com.arnyminerz.androidmatic.data.numeric.MinMaxValue
 import com.arnyminerz.androidmatic.data.providers.model.Descriptor
 import com.arnyminerz.androidmatic.data.providers.model.WeatherManualProvider
+import com.arnyminerz.androidmatic.exceptions.MissingParameterException
 import com.arnyminerz.androidmatic.singleton.VolleySingleton
 import com.arnyminerz.androidmatic.utils.doAsync
 import com.arnyminerz.androidmatic.utils.toast
@@ -73,25 +74,25 @@ class WeewxTemplateProvider : WeatherManualProvider() {
 
     override suspend fun fetch(
         context: Context,
-        vararg params: Pair<String, Any>
+        params: Map<String, Any>
     ): StationFeedResult {
-        val url = params.find { it.first == "url" }?.second as? String
-            ?: throw IllegalArgumentException("params doesn't have any \"url\".")
+        val url = params["url"] as? String
+            ?: throw MissingParameterException("params doesn't have any \"url\".")
         val template = VolleySingleton.getInstance(context)
             .getString(url)
-        val (station, weather) = parse(template, *params)
+        val (station, weather) = parse(template, params)
         return StationFeedResult(weather.timestamp, listOf(station))
     }
 
     override suspend fun fetchWeather(
         context: Context,
-        vararg params: Pair<String, Any>
+        params: Map<String, Any>
     ): WeatherState {
-        val url = params.find { it.first == "url" }?.second as? String
-            ?: throw IllegalArgumentException("params doesn't have any \"url\".")
+        val url = params["url"] as? String
+            ?: throw MissingParameterException("params doesn't have any \"url\".")
         val template = VolleySingleton.getInstance(context)
             .getString(url)
-        val (_, weather) = parse(template, *params)
+        val (_, weather) = parse(template, params)
         return weather
     }
 
@@ -108,11 +109,11 @@ class WeewxTemplateProvider : WeatherManualProvider() {
     @Throws(ParseException::class)
     private fun parse(
         template: String,
-        vararg params: Pair<String, Any>,
+        params: Map<String, Any>,
     ): Pair<Station, WeatherState> {
-        val url = params.find { it.first == "url" }?.second as? String
+        val url = params["url"] as? String
             ?: throw IllegalArgumentException("params doesn't have any \"url\".")
-        val name = params.find { it.first == "name" }?.second as? String
+        val name = params["name"] as? String
             ?: throw IllegalArgumentException("params doesn't have any \"name\".")
 
         val lines = template
@@ -245,7 +246,7 @@ class WeewxTemplateProvider : WeatherManualProvider() {
                     enabled = false
                     doAsync {
                         val valid = firstWithDescriptor(ProviderDescriptor.name)
-                            ?.check(context, "name" to stationName, "url" to templateUrl)
+                            ?.check(context, mapOf("name" to stationName, "url" to templateUrl))
                             ?: false
                         ui {
                             context.toast(
@@ -271,8 +272,10 @@ class WeewxTemplateProvider : WeatherManualProvider() {
                             val station = firstWithDescriptor(ProviderDescriptor.name)
                                 ?.fetch(
                                     context,
-                                    "name" to stationName,
-                                    "url" to templateUrl
+                                    mapOf(
+                                        "name" to stationName,
+                                        "url" to templateUrl,
+                                    )
                                 )
                                 ?.takeIf { it.stations.isNotEmpty() }
                                 ?.also { Timber.i("Station is fine!") }

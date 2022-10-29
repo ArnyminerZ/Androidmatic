@@ -45,7 +45,7 @@ abstract class HoldingDescriptor : Descriptor(), JsonSerializable {
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getValue(key: String): T = data.getValue(key) as T
 
-    fun expand(): Array<out Pair<String, Any>> = data.toList().toTypedArray()
+    fun expand(): Map<String, Any> = data
 
     override fun toJson(): JSONObject = JSONObject().apply {
         put("name", name)
