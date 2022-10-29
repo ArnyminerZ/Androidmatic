@@ -133,7 +133,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     val descriptor = HoldingDescriptor.fromJson(station.customDescriptor.json)
                     val provider = WeatherProvider.firstWithDescriptor(descriptor.name)
                     Timber.d("  Provider for $station is: ${provider?.providerName}")
-                    val stationWeather = provider?.fetchWeather(context, *descriptor.expand())
+                    val stationWeather = provider?.fetchWeather(context, descriptor.expand())
                     Timber.d("Weather data for $station is ready. Showing in UI...")
                     if (stationWeather != null)
                         ui { weather[station.id] = stationWeather }

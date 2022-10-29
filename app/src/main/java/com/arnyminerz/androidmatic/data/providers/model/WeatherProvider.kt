@@ -5,6 +5,7 @@ import androidx.annotation.WorkerThread
 import com.android.volley.VolleyError
 import com.arnyminerz.androidmatic.data.StationFeedResult
 import com.arnyminerz.androidmatic.data.WeatherState
+import com.arnyminerz.androidmatic.exceptions.MissingParameterException
 import com.arnyminerz.androidmatic.utils.takeOrThrow
 import com.arnyminerz.androidmatic.utils.tryTaking
 import timber.log.Timber
@@ -26,8 +27,8 @@ abstract class WeatherProvider {
     abstract val descriptor: Descriptor
 
     @WorkerThread
-    suspend fun check(context: Context, vararg params: Pair<String, Any>): Boolean = try {
-        fetch(context, *params)
+    suspend fun check(context: Context, params: Map<String, Any>): Boolean = try {
+        fetch(context, params)
         true
     } catch (e: Exception) {
         false
@@ -40,21 +41,21 @@ abstract class WeatherProvider {
      * @param context The [Context] that is requesting the data.
      * @param params The parameters to use. Specific to each provider.
      * @return A new [StationFeedResult] with the loaded data.
-     * @throws IllegalArgumentException When the given [params] have some data missing.
+     * @throws MissingParameterException When the given [params] have some data missing.
      * @throws ParseException When a value is missing on the response to be parsed.
      * @throws VolleyError When there's an error whilst fetching some data from an API.
      */
-    @Throws(IllegalArgumentException::class, ParseException::class, VolleyError::class)
+    @Throws(MissingParameterException::class, ParseException::class, VolleyError::class)
     @WorkerThread
     abstract suspend fun fetch(
         context: Context,
-        vararg params: Pair<String, Any>
+        params: Map<String, Any>
     ): StationFeedResult
 
     @WorkerThread
     abstract suspend fun fetchWeather(
         context: Context,
-        vararg params: Pair<String, Any>
+        params: Map<String, Any>
     ): WeatherState
 
     companion object {
