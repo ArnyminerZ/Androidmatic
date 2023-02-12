@@ -59,7 +59,6 @@ import java.util.Date
 fun WeatherCard(
     weather: WeatherState?,
     stationDescriptor: String?,
-    enableSharing: Boolean,
     onDeleteRequested: (() -> Job)?
 ) {
     val context = LocalContext.current
@@ -100,7 +99,7 @@ fun WeatherCard(
                                     }
                                 },
                         )
-                    if (stationDescriptor != null && enableSharing)
+                    if (stationDescriptor != null)
                         ListItem(
                             headlineText = { Text(text = stringResource(R.string.dialog_action_share)) },
                             leadingContent = {
@@ -112,11 +111,7 @@ fun WeatherCard(
                             modifier = Modifier
                                 .clickable(enabled = shareEnabled) {
                                     shareEnabled = false
-                                    Station
-                                        .share(context, weather.stationName, stationDescriptor)
-                                        .addOnCompleteListener {
-                                            shareEnabled = true
-                                        }
+                                    Station.share(context, weather.stationName, stationDescriptor)
                                 },
                         )
                 }
@@ -274,7 +269,6 @@ fun WeatherCardPreview(
             literalState,
         ),
         null,
-        false,
         null,
     )
 }

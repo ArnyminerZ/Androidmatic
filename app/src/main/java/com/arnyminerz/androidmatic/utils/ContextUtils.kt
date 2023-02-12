@@ -12,8 +12,6 @@ import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
 import androidx.annotation.UiThread
 import androidx.lifecycle.AndroidViewModel
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
 import kotlin.reflect.KClass
 
 /**
@@ -91,21 +89,4 @@ fun Context.share(text: String) {
 
     val shareIntent = Intent.createChooser(sendIntent, null)
     startActivity(shareIntent)
-}
-
-/**
- * Checks if Google Play Services are available.
- * @author Arnau Mora
- * @since 20221027
- * @return `true` if they are available, `false` otherwise.
- */
-fun Activity.areGooglePlayServicesAvailable(): Boolean {
-    val apiAvailability = GoogleApiAvailability.getInstance()
-    val status = apiAvailability.isGooglePlayServicesAvailable(this)
-    if (status == ConnectionResult.SUCCESS) {
-        if (apiAvailability.isUserResolvableError(status))
-            apiAvailability.getErrorDialog(this, status, 2404)?.show()
-        return false
-    }
-    return true
 }

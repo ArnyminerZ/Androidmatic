@@ -5,8 +5,6 @@ import android.os.Bundle
 import androidx.annotation.WorkerThread
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.state.updateAppWidgetState
-import com.google.firebase.analytics.ktx.analytics
-import com.google.firebase.ktx.Firebase
 import org.json.JSONObject
 import timber.log.Timber
 
@@ -20,13 +18,6 @@ suspend fun updateWeatherWidget(context: Context, glanceId: GlanceId) {
         }!!
         val weather = data.station.fetchWeather(context)
         preferences[prefKey] = data.copy(weather = weather).toJson().toString()
-
-        Firebase.analytics.logEvent(
-            "widget_update",
-            Bundle().apply {
-                putString("station", data.station.uid)
-            },
-        )
     }
     WeatherWidget().update(context, glanceId)
 }
