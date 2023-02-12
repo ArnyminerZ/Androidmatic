@@ -61,6 +61,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.android.volley.TimeoutError
+import com.arnyminerz.androidmatic.BuildConfig
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.providers.model.Descriptor
@@ -80,8 +81,6 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
-import com.google.firebase.dynamiclinks.ktx.dynamicLinks
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -151,16 +150,14 @@ open class AddStationActivity(
             .takeIf { it.hasPrimaryClip() }
             ?.let { it.primaryClip?.getItemAt(0) }
             ?.uri
-            ?.takeIf { it.host == "androidmatic.page.link" }
-            ?.let { Firebase.dynamicLinks.getDynamicLink(it) }
-            ?.addOnSuccessListener {
+            ?.takeIf { it.host == BuildConfig.APPLICATION_ID }
+            ?.let { uri ->
                 try {
-                    clipboardContentState.value = SelectedStationEntity.fromDynamicLink(it)
+                    clipboardContentState.value = SelectedStationEntity.fromLink(uri)
                 } catch (e: Exception) {
                     Timber.e(e, "Could not parse clipboard contents")
                 }
             }
-            ?.addOnFailureListener { Timber.e(it, "Could not load dynamic link.") }
 
         setThemedContent {
             val scope = rememberCoroutineScope()

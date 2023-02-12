@@ -1,11 +1,12 @@
 package com.arnyminerz.androidmatic.storage.database.entity
 
 import android.net.Uri
+import android.util.Base64
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.arnyminerz.androidmatic.data.Station
 import com.arnyminerz.androidmatic.data.providers.model.HoldingDescriptor
-import com.google.firebase.dynamiclinks.PendingDynamicLinkData
 import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
@@ -20,30 +21,25 @@ data class SelectedStationEntity(
 ) {
     companion object {
         /**
-         * Instantiates a new [SelectedStationEntity] from a pending dynamic link.
+         * Instantiates a new [SelectedStationEntity] from a link shared from the app.
          * @author Arnau Mora
-         * @since 20221003
+         * @since 20230212
+         * @param link The link to process.
+         * @throws JSONException If the descriptor included in the URL is not valid.
+         * @see [Station.share]
          */
-        fun fromDynamicLink(pendingDynamicLinkData: PendingDynamicLinkData?): SelectedStationEntity {
-            // Get deep link from result (may be null if no link is found)
-            val deepLink: Uri = pendingDynamicLinkData?.link
-                ?: throw NullPointerException("The dynamic link doesn't have any deep link.")
-
-            Timber.i("Link: $deepLink. Extensions: ${pendingDynamicLinkData.extensions}")
-
-            Timber.i("Loading link...")
-            if (!deepLink.queryParameterNames.contains("descriptor"))
-                throw IllegalStateException("The deep link doesn't contain any descriptor: $deepLink")
-            val rawDescriptorJson: String = deepLink.getQueryParameter("descriptor")!!
+        fun fromLink(link: Uri): SelectedStationEntity {
+            val encodedDescriptor = link.path
+            val decodedDescriptor = Base64.decode(encodedDescriptor, Base64.DEFAULT).toString()
             val descriptor = try {
-                val jsonObject = JSONObject(rawDescriptorJson)
+                val jsonObject = JSONObject(decodedDescriptor)
                 HoldingDescriptor.fromJson(jsonObject)
             } catch (e: JSONException) {
-                Timber.e(e, "Could not parse descriptor JSON: $rawDescriptorJson")
+                Timber.e(e, "Could not parse descriptor JSON: $decodedDescriptor")
                 throw e
             }
             val uid = descriptor.getValue<String>("uid")
-            return SelectedStationEntity(0, uid, rawDescriptorJson)
+            return SelectedStationEntity(0, uid, decodedDescriptor)
         }
     }
 

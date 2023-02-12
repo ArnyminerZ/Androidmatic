@@ -75,10 +75,6 @@
     <string name="settings_category_advanced">Advanced</string>
     <string name="settings_language_title">Language</string>
     <string name="settings_language_summary">Select your favorite language to display in the UI.</string>
-    <string name="settings_analytics_enabled_title">Send Usage and Performance data</string>
-    <string name="settings_analytics_enabled_summary">If enabled, the app will send the developer information about the performance of the app, and how it\'s used, to improve its functionality.</string>
-    <string name="settings_error_enabled_title">Send Error and Crash logs</string>
-    <string name="settings_error_enabled_summary">If enabled, the app will send information to the developer whenever the app crashes, or there\'s an error. This makes the process of diagnosing and fixing errors so much easier. This information contains app logs, and some information about the device you are running, and the software it\'s running.</string>
     <string name="settings_service_title">Background Service</string>
     <string name="settings_service_running">Weather updates are being fetched in background every %d minutes. Last run: %s</string>
     <string name="settings_service_running_never">Weather updates are being fetched in background every %d minutes. Still not run any time.</string>

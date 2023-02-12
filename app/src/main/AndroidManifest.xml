@@ -40,8 +40,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="androidmatic.page.link"
-                    android:scheme="https" />
+                    android:host="com.arnyminerz.androidmatic"
+                    android:scheme="app" />
             </intent-filter>
         </activity>
         <activity

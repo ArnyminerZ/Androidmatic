@@ -26,8 +26,6 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "an
  * @since 20220924
  */
 object Keys {
-    val ANALYTICS_COLLECTION = booleanPreferencesKey("analytics")
-    val CRASH_COLLECTION = booleanPreferencesKey("crash")
     val LAST_WORKER_RUN = longPreferencesKey("last_worker_run")
 }
 

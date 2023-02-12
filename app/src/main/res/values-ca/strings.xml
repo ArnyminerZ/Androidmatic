@@ -53,10 +53,6 @@
     <string name="state_adding">Afegint…</string>
     <string name="state_loading">Carregant…</string>
     <string name="settings_category_advanced">Avançat</string>
-    <string name="settings_analytics_enabled_title">Envia dades d\'ús i rendiment</string>
-    <string name="settings_analytics_enabled_summary">Si està habilitat, l\'aplicació enviarà al desenvolupador informació sobre el rendiment de l\'aplicació, i com està funcionant, per a millorar el seu rendiment.</string>
-    <string name="settings_error_enabled_title">Envia reports d\'Errors i Tancades Sobtades</string>
-    <string name="settings_error_enabled_summary">Si està habilitat, l\'aplicació enviarà dades al desenvolupador quan es tanque sobtadament, o hi haja cap error. Açò fa que el procés de buscar i solucionar errors siga molt més senzill. La informació enviada inclou registres de l\'aplicació, i un poc d\'informació sobre el dispositiu que s\'està fent servir, la versió de l\'aplicació, i del SO d\'Android.</string>
     <string name="settings_service_title">Servei en segon pla</string>
     <string name="settings_service_running">Les actualitzacions d\'oratge estan sent obtenides en segon pla cada %d minuts. Última execució: %s</string>
     <string name="settings_service_running_never">Les actualitzacions d\'oratge estan sent obtenides en segon pla cada %d minuts. Encara no s\'ha executat.</string>

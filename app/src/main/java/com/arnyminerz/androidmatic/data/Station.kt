@@ -3,8 +3,10 @@ package com.arnyminerz.androidmatic.data
 import android.content.Context
 import android.net.Uri
 import android.nfc.FormatException
+import android.util.Base64
 import androidx.annotation.WorkerThread
 import com.android.volley.VolleyError
+import com.arnyminerz.androidmatic.BuildConfig
 import com.arnyminerz.androidmatic.R
 import com.arnyminerz.androidmatic.data.model.JsonSerializable
 import com.arnyminerz.androidmatic.data.model.putSerializable
@@ -18,11 +20,6 @@ import com.arnyminerz.androidmatic.utils.share
 import com.arnyminerz.androidmatic.utils.skip
 import com.arnyminerz.androidmatic.utils.toast
 import com.arnyminerz.androidmatic.utils.xmlPubDateFormatter
-import com.google.firebase.dynamiclinks.ktx.androidParameters
-import com.google.firebase.dynamiclinks.ktx.dynamicLinks
-import com.google.firebase.dynamiclinks.ktx.shortLinkAsync
-import com.google.firebase.dynamiclinks.ktx.socialMetaTagParameters
-import com.google.firebase.ktx.Firebase
 import org.json.JSONException
 import org.json.JSONObject
 import org.xmlpull.v1.XmlPullParser
@@ -117,8 +114,12 @@ data class Station(
          * @return A Task for running extra actions after sharing.
          * @see Descriptor
          */
-        fun share(context: Context, stationName: String, descriptor: String) =
-            Firebase.dynamicLinks
+        fun share(context: Context, stationName: String, descriptor: String) {
+            val descriptorData = descriptor.toByteArray()
+            val encodedDescriptor = Base64.encodeToString(descriptorData, Base64.DEFAULT)
+            val link = "app://${BuildConfig.APPLICATION_ID}/$descriptor"
+        }
+            /*Firebase.dynamicLinks
                 .shortLinkAsync {
                     link =
                         Uri.parse("https://androidmatic.arnyminerz.com/add_station?descriptor=$descriptor")
@@ -137,7 +138,7 @@ data class Station(
                 .addOnFailureListener {
                     Timber.e(it, "Could not create short link.")
                     context.toast(R.string.toast_short_link)
-                }
+                }*/
     }
 
     val name: String = descriptor.getValue("name")
