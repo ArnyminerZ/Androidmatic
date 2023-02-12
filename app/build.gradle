@@ -13,8 +13,8 @@ android {
         applicationId "com.arnyminerz.androidmatic"
         minSdk 21
         targetSdk 33
-        versionCode 8
-        versionName "1.0.0-rc04"
+        versionCode 9
+        versionName "1.0.0-rc05"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
