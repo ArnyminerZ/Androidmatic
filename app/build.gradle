@@ -121,7 +121,7 @@ dependencies {
     implementation 'androidx.compose.material3:material3:1.0.1'
 
     // Jetpack Compose - Accompanist
-    def accompanist_version = "0.28.0"
+    def accompanist_version = "0.30.0"
     implementation "com.google.accompanist:accompanist-placeholder-material:$accompanist_version"
     implementation "com.google.accompanist:accompanist-pager:$accompanist_version"
 
